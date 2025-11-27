@@ -33,6 +33,8 @@ enum class ESentenceStructureType : uint8
 	CompoundComplex     UMETA(DisplayName = "Compound-Complex"),
 };
 
+
+
 struct FSentenceAttributes
 {
 	TArray<ESentenceType> SentenceTypes;
@@ -52,6 +54,14 @@ const TSet<FString> SentenceTerminators = {
 	TEXT(":"), TEXT(";")
 };
 
+static const TMap<ESentenceStructureType, int32> SentenceStructureMultiplier = {
+	{ ESentenceStructureType::Unknown			,0 },
+	{ ESentenceStructureType::Simple         	,1 },
+	{ ESentenceStructureType::Compound       	,2 },
+	{ ESentenceStructureType::Complex        	,2 },
+	{ ESentenceStructureType::CompoundComplex	,4 }
+};
+
 class AGAMEABOUTWRITTING_API SentenceAnalyser
 {
 public:
@@ -62,6 +72,11 @@ public:
 	bool HasNextSentence() const;
 	FString GetNextSentence();
 	FSentenceAttributes const& GetCurrentSentenceAttributes();
+
+	int32 GetSentenceMultiplier(ESentenceStructureType const& structure) const {
+		auto const mult = SentenceStructureMultiplier.Find(structure);
+		return mult ? *mult : 0;
+	};
 
 	void Reset();
 

@@ -3,7 +3,7 @@
 
 #include "TextScoringSystem/ItemListFinder.h"
 
-static void* DllHandle = nullptr;
+static void* CN_DllHandle = nullptr;
 typedef int (*GetRelatedFunc)(const char*, RelatedResult**);
 typedef void (*FreeResultsFunc)(RelatedResult*, int);
 
@@ -13,12 +13,12 @@ FreeResultsFunc FreeResults = nullptr;
 ItemListFinder::ItemListFinder(UDataTable* item_list_data_table)
 {
     FString DllPath = FPaths::Combine(FPaths::ProjectDir(), TEXT("Binaries/Win64/ConceptRelationDll.dll"));
-    DllHandle = FPlatformProcess::GetDllHandle(*DllPath);
+    CN_DllHandle = FPlatformProcess::GetDllHandle(*DllPath);
 
-    if (DllHandle)
+    if (CN_DllHandle)
     {
-        GetRelatedWords = (GetRelatedFunc)FPlatformProcess::GetDllExport(DllHandle, TEXT("GetRelated"));
-        FreeResults = (FreeResultsFunc)FPlatformProcess::GetDllExport(DllHandle, TEXT("FreeResults"));
+        GetRelatedWords = (GetRelatedFunc)FPlatformProcess::GetDllExport(CN_DllHandle, TEXT("GetRelated"));
+        FreeResults = (FreeResultsFunc)FPlatformProcess::GetDllExport(CN_DllHandle, TEXT("FreeResults"));
     }
     else
     {

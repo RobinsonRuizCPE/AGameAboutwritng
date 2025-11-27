@@ -26,8 +26,9 @@ void AItemTheme::UseObject_Implementation(FVector UseDirection, FVector UsePosit
         return;
     }
     
-    actor_highlighted->Execute_Interact(actor_highlighted, this);
     PlayerCharacter->StopInteractWithObject();
+    Super::Interact_Implementation(actor_highlighted);
+    actor_highlighted->Execute_Interact(actor_highlighted, this);
 }
 
 void AItemTheme::StopInteract_Implementation(AActor* ActorStopingInteract) {

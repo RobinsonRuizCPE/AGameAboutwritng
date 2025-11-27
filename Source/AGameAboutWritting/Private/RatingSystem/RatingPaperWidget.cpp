@@ -62,9 +62,10 @@ void URatingPaperWidget::NativeConstruct()
 		GI->TextScoringSystem->OnScoreAdded.AddDynamic(this, &URatingPaperWidget::HandleScoreAdded);
 		GI->TextScoringSystem->OnWordProcessed.AddDynamic(this, &URatingPaperWidget::HandleWordProcessed);
 		GI->TextScoringSystem->OnSentencedProcessed.AddDynamic(this, &URatingPaperWidget::HandleSentenceProcessed);
+		GI->TextScoringSystem->OnReviewComplete.AddDynamic(this, &URatingPaperWidget::HandleReviewComplete);
 	}
 
-
+	
 	FindThemeItems();
 }
 
@@ -88,6 +89,7 @@ void URatingPaperWidget::NativeDestruct()
 			GI->TextScoringSystem->OnScoreAdded.RemoveDynamic(this, &URatingPaperWidget::HandleScoreAdded);
 			GI->TextScoringSystem->OnWordProcessed.RemoveDynamic(this, &URatingPaperWidget::HandleWordProcessed);
 			GI->TextScoringSystem->OnSentencedProcessed.RemoveDynamic(this, &URatingPaperWidget::HandleSentenceProcessed);
+			GI->TextScoringSystem->OnReviewComplete.RemoveDynamic(this, &URatingPaperWidget::HandleReviewComplete);
 		}
 	}
 
@@ -138,6 +140,11 @@ void URatingPaperWidget::HandleWordProcessed(FString word, FLinearColor const co
 void URatingPaperWidget::HandleScoreAdded(int32 ScoreToAdd, FString StringResponsible, FString Reason) {
 	CheckWordTheme(StringResponsible, ScoreToAdd);
 }
+
+void URatingPaperWidget::HandleReviewComplete() {
+	WrapUpRatingPaper();
+}
+
 
 void URatingPaperWidget::HandleSentenceProcessed(TArray<ESentenceType> sentence_types, ESentenceStructureType sentence_struct) {
 	if (sentence_types.IsEmpty()) {

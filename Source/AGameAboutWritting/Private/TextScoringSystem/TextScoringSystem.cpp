@@ -140,6 +140,7 @@ void UTextScoringSystem::ProcessNextSentence() {
 	auto const& sentence_attributes = SentenceAnalysis->GetCurrentSentenceAttributes();
 	ParseToScoredTokens(SentenceAnalysis->GetNextSentence());
 	OnSentencedProcessed.Broadcast(TArray<ESentenceType>(sentence_attributes.SentenceTypes), sentence_attributes.SentenceStructure);
+    OnMultiplicatorAdded.Broadcast(SentenceAnalysis->GetSentenceMultiplier(sentence_attributes.SentenceStructure), "Sentence structure", "");
     ScoringTimerHandle = FTSTicker::GetCoreTicker().AddTicker(
         FTickerDelegate::CreateUObject(this, &UTextScoringSystem::ProcessNextScoredToken),
         0.2f   // Delay between calls in seconds

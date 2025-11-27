@@ -15,6 +15,9 @@
 *.so
 *.dylib
 *.dll
+# Allow DLLs inside ExternalDll folder
+!ExternalDll/
+!ExternalDll/*.dll
 
 # Fortran module files
 *.mod

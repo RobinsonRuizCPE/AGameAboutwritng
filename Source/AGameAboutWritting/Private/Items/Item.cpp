@@ -67,19 +67,20 @@ bool AItem::Interact_Implementation(AActor* ActorThatInteract){
         );
     }
 
-    // 2. Try casting the actor to your character class
-    PlayerCharacter = Cast<APlayerCharacter>(ActorThatInteract);
-    if (!PlayerCharacter)
-    {
-        return false;
-    }
-
     // 3. Stop physics on the mesh
     if (ItemStaticMesh)
     {
         ItemStaticMesh->SetSimulatePhysics(false);
     }
 
+    // 2. Try casting the actor to your character class
+    auto const interacter = Cast<APlayerCharacter>(ActorThatInteract);
+    if (!interacter)
+    {
+        return false;
+    }
+
+    PlayerCharacter = interacter;
     FAttachmentTransformRules AttachRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, true);
     AttachToComponent(
 		PlayerCharacter->GetMesh(),      // parent component
@@ -105,17 +106,17 @@ void AItem::StopInteract_Implementation(AActor* ActorStopingInteract) {
         );
     }
 
+    // 3. Stop physics on the mesh
+    if (ItemStaticMesh)
+    {
+        ItemStaticMesh->SetSimulatePhysics(true);
+    }
+
     // 2. Try casting the actor to your character class
     PlayerCharacter = Cast<APlayerCharacter>(ActorStopingInteract);
     if (!PlayerCharacter)
     {
         return;
-    }
-
-    // 3. Stop physics on the mesh
-    if (ItemStaticMesh)
-    {
-        ItemStaticMesh->SetSimulatePhysics(true);
     }
 
     FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);

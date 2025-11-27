@@ -15,6 +15,8 @@
 #include "RatingPaperMaterialParams.h"
 #include "RatingPaperWidget.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFinishedWrapUp);
+
 UCLASS()
 class AGAMEABOUTWRITTING_API URatingPaperWidget : public UUserWidget
 {
@@ -51,6 +53,17 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Rating|Refresh")
 		void HandleThemeFound(AItemTheme* item_them, FString const& word, int32 frequency_score ,float found_weight);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Rating|Refresh")
+		void WrapUpRatingPaper();
+	UFUNCTION(BlueprintCallable, Category = "Rating|Refresh")
+		void RefreshWrapUpRatingPaper(){ WrapUpRatingPaper(); }
+
+	UFUNCTION(BlueprintCallable)
+		void TriggerFinishedWrapUp() { OnFinishedWrapUp.Broadcast(); }
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+		FOnFinishedWrapUp OnFinishedWrapUp;
+
 
 private:
 	UFUNCTION()
@@ -61,6 +74,9 @@ private:
 
 	UFUNCTION()
 		void HandleScoreAdded(int32 ScoreToAdd, FString StringResponsible, FString Reason);
+
+	UFUNCTION()
+		void HandleReviewComplete();
 
 	UFUNCTION()
 		void FindThemeItems();
