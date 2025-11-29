@@ -34,6 +34,9 @@ public:
         bool Interact(AActor* ActorThatInteract);
 
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
+        bool ReleaseInteractionButton(AActor* ActorThatInteract);
+
+    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
         void StopInteract(AActor* ActorStopingInteract);
 
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")

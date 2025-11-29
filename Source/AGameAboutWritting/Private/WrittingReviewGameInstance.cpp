@@ -9,6 +9,7 @@ void UWrittingReviewGameInstance::Init()
 
 	TextScoringSystem = NewObject<UTextScoringSystem>(this);
 	PreviewManager = NewObject<UItemPreviewManager>(this);
+
 	if (TextScoringSystem && WordFrequencyTable && WordTypeTable)
 	{
 		TextScoringSystem->Initialize(WordFrequencyTable, WordTypeTable, DTItemList);

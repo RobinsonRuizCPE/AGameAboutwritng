@@ -43,3 +43,5 @@ void APlayerCharacter::InteractWithActor_Implementation(AActor* actor_to_interac
 
 	IHighlightInterface::Execute_Interact(actor_to_interact_with, this);
 }
+
+void APlayerCharacter::ReleaseInteractionInput_Implementation() {}

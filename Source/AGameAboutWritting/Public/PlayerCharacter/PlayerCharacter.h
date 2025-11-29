@@ -31,6 +31,11 @@ public:
 		void PlayHoldingAnimationMontage(bool activate, bool one_handed);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactive")
+		void ReleaseInteractionInput();
+	virtual void ReleaseInteractionInput_Implementation();
+
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactive")
 		void StopInteractWithObject();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactive")
