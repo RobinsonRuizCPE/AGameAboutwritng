@@ -1,23 +1,44 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Items/Item.h"
+#include "Engine/StaticMeshSocket.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 // Sets default values
 AItem::AItem()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = true;
 
-	// Create the default subobject!
-	ItemStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemStaticMesh"));
-	RootComponent = ItemStaticMesh;
-	ItemStaticMesh->BodyInstance.bUseCCD = true;
+    // --------------------------
+    // NEW ROOT: AttachPivot
+    // --------------------------
+    AttachPivot = CreateDefaultSubobject<USceneComponent>(TEXT("AttachPivot"));
+    SetRootComponent(AttachPivot);
+    RootComponent = AttachPivot;
 
-	Arrow = CreateDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
-	Arrow->SetupAttachment(RootComponent);
+    AttachOffset = CreateDefaultSubobject<USceneComponent>(TEXT("AttachOffset"));
+    AttachOffset->SetupAttachment(AttachPivot);
 
-	Sphere = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
-	Sphere->SetupAttachment(RootComponent);
+    // --------------------------
+    // Static Mesh (child of Pivot)
+    // --------------------------
+    ItemStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemStaticMesh"));
+    ItemStaticMesh->SetupAttachment(AttachPivot);
+    ItemStaticMesh->BodyInstance.bUseCCD = true;
+    ItemStaticMesh->SetSimulatePhysics(true);
+
+    // --------------------------
+    // Arrow (child of Pivot)
+    // Designer sets THIS to define in-hand orientation!
+    // --------------------------
+    Arrow = CreateDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
+    Arrow->SetupAttachment(AttachPivot);
+
+    // --------------------------
+    // Interaction Sphere
+    // --------------------------
+    Sphere = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
+    Sphere->SetupAttachment(ItemStaticMesh);
 }
 
 
@@ -56,72 +77,67 @@ void AItem::OnNoLongerHitByPlayerLaser_Implementation()
 }
 
 bool AItem::Interact_Implementation(AActor* ActorThatInteract){
-    if (!ActorThatInteract)
-        return false;
+    if (!ActorThatInteract) return false;
 
-    if (Sphere)
-    {
-        Sphere->SetCollisionResponseToChannel(
-            ECC_GameTraceChannel1,
-            ECR_Ignore
-        );
-    }
+    // Try cast to player
+    auto* PC = Cast<APlayerCharacter>(ActorThatInteract);
+    if (!PC) return false;
+    PlayerCharacter = PC;
 
-    // 3. Stop physics on the mesh
-    if (ItemStaticMesh)
-    {
-        ItemStaticMesh->SetSimulatePhysics(false);
-    }
+    SetupItemAttachment();
 
-    // 2. Try casting the actor to your character class
-    auto const interacter = Cast<APlayerCharacter>(ActorThatInteract);
-    if (!interacter)
-    {
-        return false;
-    }
+// 3. Get arrow's current local rotation (inside the item)
+    FRotator ArrowLocalRot = Arrow->GetRelativeRotation();
 
-    PlayerCharacter = interacter;
-    FAttachmentTransformRules AttachRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, true);
-    AttachToComponent(
-		PlayerCharacter->GetMesh(),      // parent component
-        AttachRules,
+    // 5. Apply it
+    // 2) Make the Arrow’s rotation zero in socket space
+    const FQuat ArrowLocal = Arrow->GetRelativeRotation().Quaternion();
+    const FQuat PivotLocal = ArrowLocal.Inverse();      // <- key line
+
+    AttachPivot->SetRelativeRotation(PivotLocal.Rotator());    // ------------------------------------------------------
+    // 3. Compute offset using RightHandSocket (per mesh)
+    // ------------------------------------------------------
+    FVector Offset = PivotLocal.RotateVector(-Arrow->GetRelativeLocation());
+    AttachPivot->SetRelativeLocation(Offset);
+
+
+    // ------------------------------------------------------
+    // 4. Snap AttachPivot to hand socket
+    // ------------------------------------------------------
+
+    FAttachmentTransformRules Rules(EAttachmentRule::KeepRelative, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, true);
+    AttachPivot->AttachToComponent(
+        PlayerCharacter->GetMesh(),
+        Rules,
         TEXT("hand_rSocket")
     );
 
-    // 6. Set game state booleans
-	PlayerCharacter->PlayHoldingAnimationMontage(true, IsOneHanded);
-    IsHeld = true;    // if your item has an IsHeld variable
+
+    // ------------------------------------------------------
+    // 5. Player now holds it
+    // ------------------------------------------------------
+    PlayerCharacter->PlayHoldingAnimationMontage(true, IsOneHanded);
+
+    IsHeld = true;
     return true;
 }
 
 void AItem::StopInteract_Implementation(AActor* ActorStopingInteract) {
-    if (!ActorStopingInteract)
-        return;
+    if (!ActorStopingInteract) return;
 
-    if (Sphere)
-    {
-        Sphere->SetCollisionResponseToChannel(
-            ECC_GameTraceChannel1,
-            ECR_Block
-        );
-    }
+    Sphere->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Block);
 
-    // 3. Stop physics on the mesh
-    if (ItemStaticMesh)
-    {
-        ItemStaticMesh->SetSimulatePhysics(true);
-    }
+    // Re-enable physics
+    ItemStaticMesh->SetSimulatePhysics(true);
 
-    // 2. Try casting the actor to your character class
+    // Detach pivot from player
+    FDetachmentTransformRules Rules(EDetachmentRule::KeepWorld, true);
+    AttachPivot->DetachFromComponent(Rules);
+
     PlayerCharacter = Cast<APlayerCharacter>(ActorStopingInteract);
-    if (!PlayerCharacter)
-    {
-        return;
-    }
+    if (PlayerCharacter)
+        PlayerCharacter->PlayHoldingAnimationMontage(false, IsOneHanded);
 
-    FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
-    DetachFromActor(DetachRules);
-    PlayerCharacter->PlayHoldingAnimationMontage(false, IsOneHanded);
     IsHeld = false;
 }
 
@@ -145,13 +161,15 @@ void AItem::BeginPlay()
 	ItemStaticMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	ItemStaticMesh->SetCollisionObjectType(ECC_WorldStatic);
 	ItemStaticMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+    ItemStaticMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	ItemStaticMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+    ItemStaticMesh->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+
 	ItemStaticMesh->SetNotifyRigidBodyCollision(true);
 
 	Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	Sphere->SetCollisionObjectType(ECC_WorldDynamic);
 	Sphere->SetCollisionResponseToAllChannels(ECR_Ignore);
-	Sphere->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	Sphere->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Block); // Replace with your HighlightTrace channel
 	Sphere->SetNotifyRigidBodyCollision(true);
 }
@@ -162,3 +180,33 @@ void AItem::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+FHandTransforms AItem::GetHandsSockets_Implementation() const
+{
+    FHandTransforms Result;
+    Result.use_left_hand = ItemStaticMesh->DoesSocketExist("LeftHandSocket");
+    Result.use_right_hand = true;
+
+    if (Result.use_left_hand)
+        Result.LeftHandTransform = ItemStaticMesh->GetSocketTransform("LeftHandSocket", RTS_World);
+
+    Result.RightHandrelativeTransform = FTransform(
+        Arrow->GetRelativeRotation().Quaternion(),
+        AttachOffset->GetRelativeLocation(),
+        FVector::OneVector
+    );
+
+    return Result;
+}
+
+void AItem::SetupItemAttachment() {
+    Sphere->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+
+    ItemStaticMesh->SetSimulatePhysics(false);
+    ItemStaticMesh->SetRelativeRotation(FRotator::ZeroRotator);
+    ItemStaticMesh->SetRelativeLocation(FVector::ZeroVector);
+
+    ItemStaticMesh->AttachToComponent(
+        AttachPivot,
+        FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true)
+    );
+}

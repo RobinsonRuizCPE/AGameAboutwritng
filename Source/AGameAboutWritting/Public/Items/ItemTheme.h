@@ -17,10 +17,10 @@ class AGAMEABOUTWRITTING_API AItemTheme : public AItem
 public:
 
 	UFUNCTION(BlueprintCallable)
-	FString const& GetThemeName() { return Theme; }
+	TSet<FString>& GetThemeSet() { return ThemeRelatedList; }
 
 	UFUNCTION(BlueprintCallable)
-		TMap<FString, float> const& GetThemeRelatedList() { return WeightMap; }
+		TMap<FString, float>& GetThemeRelatedList() { return WeightMap; }
 
 	virtual void UseObject_Implementation(FVector UseDirection, FVector UsePosition, AActor* ActorUsingObject) override;
 	virtual void StopInteract_Implementation(AActor* ActorStopingInteract) override;

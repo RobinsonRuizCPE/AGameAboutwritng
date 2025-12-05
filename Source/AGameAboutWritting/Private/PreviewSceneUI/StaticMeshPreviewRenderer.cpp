@@ -48,11 +48,11 @@ AItemPreviewActor::AItemPreviewActor()
     SceneCapture->bUseRayTracingIfEnabled = false;
     SceneCapture->ShowFlags.SetAtmosphere(false);
     SceneCapture->ShowFlags.SetSkyLighting(false);
-    SceneCapture->ShowFlags.SetPostProcessing(false);
+    SceneCapture->ShowFlags.PostProcessing = true;
+    SceneCapture->ShowFlags.SetPostProcessing(true);
     SceneCapture->ShowFlags.SetFog(false);
     SceneCapture->ShowFlags.SetSpotLights(true);
     SceneCapture->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDR;
-    SceneCapture->ShowFlags.PostProcessing = false;
     SceneCapture->ShowFlags.Materials = true;
     SceneCapture->ShowOnlyActorComponents(this);
     SceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
@@ -86,14 +86,20 @@ AItemPreviewActor::AItemPreviewActor()
         nullptr,
         TEXT("/Game/Items/M_RenderTargetCopy.M_RenderTargetCopy")
     );
+
+    SpriteSheetWriterMaterial= LoadObject<UMaterialInterface>(
+        nullptr,
+        TEXT("/Game/Items/M_RenderTargetPerInstance.M_RenderTargetPerInstance")
+        );
 }
 
 void AItemPreviewActor::InitializePreview(UStaticMesh* Mesh, int32 Width, int32 Height)
 {
     RenderTarget = NewObject<UTextureRenderTarget2D>(this);
     RenderTarget->RenderTargetFormat = RTF_RGBA8;
-    RenderTarget->InitAutoFormat(Width, Height);
-    RenderTarget->ClearColor = FLinearColor::Transparent;
+    RenderTarget->bGPUSharedFlag = false;
+    RenderTarget->SRGB = true;
+    RenderTarget->InitCustomFormat(Width, Height, PF_B8G8R8A8, false);
     RenderTarget->UpdateResourceImmediate(true);
 
     SceneCapture->TextureTarget = RenderTarget;
@@ -126,16 +132,11 @@ void AItemPreviewActor::Tick(float DeltaSeconds)
 
         // rotate exactly per frame
         MeshComponent->AddRelativeRotation(FRotator(0, DegreesPerFrame, 0));
-
         CaptureFrameToSpriteSheet();
-
-        FramesCaptured++;
-
         if (FramesCaptured >= NumFramesToCapture)
         {
             bIsCapturingSpriteSheet = false;
             bRotate = false;
-
             SaveSpriteSheetToFile();
         }
     }
@@ -197,53 +198,23 @@ void AItemPreviewActor::CaptureFrameToSpriteSheet()
 
     SceneCapture->CaptureScene();
 
-    FTextureRenderTargetResource* RTResource = RenderTarget->GameThread_GetRenderTargetResource();
+    if (!SpriteSheetRT || !SheetWriterMID) return;
 
-    // Read this frame's pixels
-    TArray<FColor> FramePixels;
-    FramePixels.SetNum(FrameSize.X * FrameSize.Y);
-    FReadSurfaceDataFlags Flags;
-    //Flags.SetLinearToGamma(false);         // CRITICAL FIX
-    RTResource->ReadPixels(FramePixels, Flags);
+    // Update which tile we are writing into
+    SheetWriterMID->SetScalarParameterValue("FrameIndex", FramesCaptured);
 
-    // Compute grid coordinate
-    int32 Row = FramesCaptured / FramesPerAxis;
-    int32 Col = FramesCaptured % FramesPerAxis;
+    // Write to sheet using GPU
+    UKismetRenderingLibrary::DrawMaterialToRenderTarget(
+        this,
+        SpriteSheetRT,
+        SheetWriterMID
+    );
 
-    int32 DestX = Col * FrameSize.X;
-    int32 DestY = Row * FrameSize.Y;
-
-    for (int32 Y = 0; Y < FrameSize.Y; Y++)
-    {
-        for (int32 X = 0; X < FrameSize.X; X++)
-        {
-            int32 SrcIndex = Y * FrameSize.X + X;
-            int32 DestIndex = (DestY + Y) * SpriteSheetSize.X + (DestX + X);
-
-            FColor C = FramePixels[SrcIndex];
-
-            // convert per pixel instantly
-            FLinearColor Lin = C.ReinterpretAsLinear();
-            C = Lin.ToFColorSRGB();
-
-            // invert alpha ONCE here
-            C.A = 255 - C.A;
-
-            SpriteSheetPixels[DestIndex] = C;
-        }
-    }
+    FramesCaptured++;
 }
 
 void AItemPreviewActor::StartSpriteSheetCapture()
 {
-    FString MeshName = MeshComponent->GetStaticMesh()->GetName();
-
-    OutputDirectory = FPaths::ProjectSavedDir() / "ItemPreviews" / MeshName;
-    IFileManager::Get().MakeDirectory(*OutputDirectory, true);
-
-    // Final file path
-    OutputFilePath = OutputDirectory / "SpriteSheet.png";
-
     NumFramesToCapture = 64;
     FramesCaptured = 0;
 
@@ -256,53 +227,22 @@ void AItemPreviewActor::StartSpriteSheetCapture()
     FramesPerAxis = 8; // 8x8 grid
     SpriteSheetSize = FIntPoint(FrameSize.X * FramesPerAxis, FrameSize.Y * FramesPerAxis);
 
-    // Allocate buffer for the sprite sheet
-    SpriteSheetPixels.SetNum(SpriteSheetSize.X * SpriteSheetSize.Y);
+    // Create Sprite Sheet RT (8x8 frames)
+    SpriteSheetRT = NewObject<UTextureRenderTarget2D>(this);
+    SpriteSheetRT->RenderTargetFormat = RTF_RGBA8;
+    SpriteSheetRT->SRGB = false;
+    SpriteSheetRT->bGPUSharedFlag = false;
+    SpriteSheetRT->InitCustomFormat(FrameSize.X * FramesPerAxis,
+        FrameSize.Y * FramesPerAxis, PF_B8G8R8A8, false);
+    SpriteSheetRT->UpdateResource();
+
+    SheetWriterMID = UMaterialInstanceDynamic::Create(SpriteSheetWriterMaterial, this);
+    SheetWriterMID->SetScalarParameterValue("FramesPerAxis", FramesPerAxis);
+    SheetWriterMID->SetTextureParameterValue("FrameTexture", RenderTarget);
 }
 
 void AItemPreviewActor::SaveSpriteSheetToFile()
 {
-    FCreateTexture2DParameters Params;
-    Params.bDeferCompression = true;
-    SpriteSheetTexture = UTexture2D::CreateTransient(
-        SpriteSheetSize.X,
-        SpriteSheetSize.Y,
-        PF_B8G8R8A8
-    );
-
-    SpriteSheetTexture->SRGB = true;
-    SpriteSheetTexture->NeverStream = true;
-
-    // Lock for writing
-    void* TextureData = SpriteSheetTexture->GetPlatformData()
-        ->Mips[0]
-        .BulkData
-        .Lock(LOCK_READ_WRITE);
-
-    // Copy our BGRA data
-    FMemory::Memcpy(
-        TextureData,
-        SpriteSheetPixels.GetData(),
-        SpriteSheetPixels.Num() * sizeof(FColor)
-    );
-
-    // Unlock
-    SpriteSheetTexture->GetPlatformData()
-        ->Mips[0]
-        .BulkData
-        .Unlock();
-    // Load sprite sheet texture
-    //SpriteSheetTexture = FImageUtils::ImportFileAsTexture2D(OutputFilePath);
-    SpriteSheetTexture->CompressionSettings = TC_Default;
-    SpriteSheetTexture->MipGenSettings = TMGS_NoMipmaps;
-    SpriteSheetTexture->NeverStream = true;
-    SpriteSheetTexture->UpdateResource();
-    if (!SpriteSheetTexture)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to import sprite sheet texture"));
-        return;
-    }
-
     // Disable SceneCapture forever
     SceneCapture->TextureTarget = nullptr;
     SceneCapture->DestroyComponent();
@@ -310,7 +250,7 @@ void AItemPreviewActor::SaveSpriteSheetToFile()
 
     // Create MID from your copy material
     AnimatedMID = UMaterialInstanceDynamic::Create(CopyTextureMaterial, this);
-    AnimatedMID->SetTextureParameterValue("SheetTexture", SpriteSheetTexture);
+    AnimatedMID->SetTextureParameterValue("SheetTexture", SpriteSheetRT);
     AnimatedMID->SetScalarParameterValue("FramesPerAxis", 8);
     AnimatedMID->SetScalarParameterValue("FrameIndex", 0);
 

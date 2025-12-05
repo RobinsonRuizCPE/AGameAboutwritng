@@ -115,6 +115,7 @@ ItemListFinder::ItemListFinder(UDataTable* item_list_data_table)
                     int Count = GetRelatedWords(WordUtf8.Get(), &Results);
 
                     TMap<FString, float> RelatedMap;
+                    RelatedMap.Add(LowerWord, 2.0);
 
                     for (int K = 0; K < Count; K++)
                     {
@@ -125,7 +126,6 @@ ItemListFinder::ItemListFinder(UDataTable* item_list_data_table)
                         WordToItemClassMap.Add(Label, ItemClass);
                     }
 
-                    RelatedMap.Add(LowerWord, 2.0);
                     WordRelatedWeights.Add(LowerWord, RelatedMap);
                     FreeResults(Results, Count);
                 }
@@ -161,4 +161,13 @@ TMap<FString, float> ItemListFinder::GetWordRelatedWeights(UClass* class_to_sear
 
     return map_to_return;
 }
+
+TSet<FString> ItemListFinder::GetBaseThemeFromClass(UClass* class_to_search) {
+    if (auto found_class = ItemToGeneralThemeMap.Find(class_to_search)) {
+        return TSet<FString>{*found_class};
+    }
+
+    return {};
+}
+
 

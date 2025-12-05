@@ -27,7 +27,6 @@ public:
     void InitializePreview(UStaticMesh* Mesh, int32 Width = 512, int32 Height = 512);
     void SetMesh(UStaticMesh* Mesh);
     UTextureRenderTarget2D* GetRenderTarget() const { return RenderTarget; }
-    void SetRotationEnabled(bool bEnabled) { bRotate = bEnabled; }
     void CenterMeshInCapture();
 
     void CaptureFrameToSpriteSheet();
@@ -41,15 +40,15 @@ protected:
     UPROPERTY(EditDefaultsOnly)
         UMaterialInterface* CopyTextureMaterial;
 
+    UPROPERTY(EditDefaultsOnly)
+        UMaterialInterface* SpriteSheetWriterMaterial;
+
 private:
     UPROPERTY()
         USceneComponent* Root;
 
     UPROPERTY()
         UStaticMeshComponent* MeshComponent;
-
-    UPROPERTY()
-        UTexture2D* SpriteSheetTexture;
 
     UPROPERTY()
         UMaterialInstanceDynamic* AnimatedMID;
@@ -63,22 +62,17 @@ private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Preview", meta = (AllowPrivateAccess = "true"))
         UTextureRenderTarget2D* RenderTarget;
 
+    UPROPERTY()
+        UTextureRenderTarget2D* SpriteSheetRT;
+    UPROPERTY()
+        UMaterialInstanceDynamic* SheetWriterMID;
+
     bool bRotate = true;
     float RotationSpeed = 25.f;
-    float timer = 0.f;
 
     // Number of frames per full rotation
     int32 NumFramesToCapture = 64;
 
-    // Where to save the frames
-    FString OutputDirectory;
-    FString OutputFilePath;
-
-    // Internal counters
-    int32 CurrentFrame = 0;
-    bool bIsCapturing = false;
-
-    TArray<FColor> SpriteSheetPixels;
     int32 FramesCaptured = 0;
     int32 FramesPerAxis = 8;  // because sqrt(64) = 8
     bool bIsCapturingSpriteSheet = false;
@@ -86,7 +80,6 @@ private:
     FIntPoint SpriteSheetSize;
 
     float FrameTimer;
-    int CurrentAnimFrame = 0;
     bool shouldAnimateSheet = false;
 };
 

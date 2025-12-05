@@ -23,6 +23,8 @@ public:
 
 	TMap<FString, float> GetWordRelatedWeights(UClass* class_to_search);
 
+	TSet<FString> GetBaseThemeFromClass(UClass* class_to_search);
+
 private:
 	TMap< UClass*, TArray<FString>> ItemToGeneralThemeMap;
 	TMultiMap<FString, UClass*> WordToItemClassMap;

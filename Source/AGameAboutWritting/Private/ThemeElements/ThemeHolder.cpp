@@ -35,3 +35,19 @@ void AThemeHolder::Tick(float DeltaTime)
 
 }
 
+void AThemeHolder::DetachFromHolder(AItemTheme* item_to_detach) {
+	if (!item_to_detach) {
+		return;
+	}
+	item_to_detach->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	TriggerThemeRemoved();
+	item_to_detach->Execute_StopInteract(item_to_detach,this);
+}
+
+
+void AThemeHolder::AttachToHolder(AItemTheme* Itemtheme) {
+	Itemtheme->SetupItemAttachment();
+	FAttachmentTransformRules Rules{ EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, false };
+	Itemtheme->AttachToComponent(StaticMesh, Rules, "HolderSocket");
+}
+

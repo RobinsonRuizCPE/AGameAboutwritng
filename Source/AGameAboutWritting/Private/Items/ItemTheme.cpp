@@ -11,6 +11,7 @@ void AItemTheme::BeginPlay()
 
     UWrittingReviewGameInstance* GI = Cast<UWrittingReviewGameInstance>(GetGameInstance());
     WeightMap= GI->TextScoringSystem->GetWeightsFromClass(this->GetClass());
+    ThemeRelatedList = GI->TextScoringSystem->GetBasethemeFromClass(this->GetClass());
 
 }
 
@@ -26,7 +27,10 @@ void AItemTheme::UseObject_Implementation(FVector UseDirection, FVector UsePosit
         return;
     }
     
-    PlayerCharacter->StopInteractWithObject();
+    if (actor_highlighted->ShouldDropInteractionWithObject()) {
+        PlayerCharacter->StopInteractWithObject();
+    }
+
     Super::Interact_Implementation(actor_highlighted);
     actor_highlighted->Execute_Interact(actor_highlighted, this);
 }

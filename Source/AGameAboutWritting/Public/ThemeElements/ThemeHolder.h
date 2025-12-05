@@ -9,6 +9,16 @@
 #include "Components/StaticMeshComponent.h"
 #include "ThemeHolder.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnThemeInserted,
+	AItemTheme*, ItemInserted
+);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(
+	FOnthemeRemoved
+);
+
+
 UCLASS()
 class AGAMEABOUTWRITTING_API AThemeHolder : public AActorInteractable
 {
@@ -26,6 +36,18 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable, Category = "Item holder")
+		void DetachFromHolder(AItemTheme* item_to_detach);
+
+	UFUNCTION(BlueprintCallable, Category = "Item holder")
+		void AttachToHolder(AItemTheme* Itemtheme);
+
+	UFUNCTION(BlueprintCallable)
+		void TriggerThemeInserted(AItemTheme* Theme) { OnThemeInserted.Broadcast(Theme); }
+
+	UFUNCTION(BlueprintCallable)
+		void TriggerThemeRemoved() { OnThemeRemoved.Broadcast(); }
+
 protected:
 	/** Arrow as root */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -38,4 +60,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 		AItemTheme* AttachedItemThem;
 
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+		FOnThemeInserted OnThemeInserted;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+		FOnthemeRemoved OnThemeRemoved;
 };

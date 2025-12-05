@@ -23,4 +23,11 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	bool ShouldDropInteractionWithObject() const { return ShouldDropInteractionWithCurrentObject; }
+
+protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+		bool ShouldDropInteractionWithCurrentObject = true;
 };

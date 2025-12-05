@@ -9,7 +9,32 @@
 #include "Components/SphereComponent.h"
 #include "Components/ArrowComponent.h"
 #include "../PlayerCharacter/PlayerCharacter.h"
+
+#include "RealtimeMeshComponent.h"
+#include "RealtimeMeshSimple.h"
+
 #include "Item.generated.h"
+
+USTRUCT(BlueprintType)
+struct FHandTransforms
+{
+	GENERATED_BODY()
+
+public:
+	FHandTransforms() : LeftHandTransform(), RightHandrelativeTransform() {}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FTransform LeftHandTransform;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FTransform RightHandrelativeTransform;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool use_left_hand = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool use_right_hand = false;
+};
 
 UCLASS(Blueprintable)
 class AGAMEABOUTWRITTING_API AItem : public AActorInteractable
@@ -28,10 +53,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-public:
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Default")
-		void GetLeftHandWeaponSocket();
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Weapon")
+		FHandTransforms GetHandsSockets() const;
 
+	virtual FHandTransforms GetHandsSockets_Implementation() const;
+
+
+public:
 	/** === Class (static) Getters === */
 	UFUNCTION(BlueprintCallable, Category = "Item|Class Accessors", meta = (DisplayName = "Get Item Display Name (Class)"))
 		static FText GetItemDisplayNameFromClass(TSubclassOf<AItem> ItemClass);
@@ -60,7 +88,17 @@ public:
 	virtual void StopInteract_Implementation(AActor* ActorStopingInteract) override;
 	virtual void UseObject_Implementation(FVector UseDirection, FVector UsePosition, AActor* ActorUsingObject) override;
 
+	UFUNCTION(BlueprintCallable, Category = "Item|Accessors")
+		void SetupItemAttachment();
+
 public:
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default", meta = (AllowPrivateAccess = "true"))
+		TObjectPtr<USceneComponent> AttachPivot;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default", meta = (AllowPrivateAccess = "true"))
+		TObjectPtr<USceneComponent> AttachOffset;
+
 	/** Please add a variable description */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default", meta = (AllowPrivateAccess = "true"))
 		TObjectPtr<UArrowComponent> Arrow;
@@ -95,5 +133,11 @@ public:
 	/** The price in whatever in-game currency you use */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item|Data", meta = (ClampMin = "0"))
 		int32 Price;
+
+	UPROPERTY()
+		mutable bool bHandTransformsCached = false;
+
+	UPROPERTY()
+		mutable FHandTransforms CachedHandTransformsLocal;
 };
 

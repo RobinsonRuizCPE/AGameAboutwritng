@@ -93,6 +93,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		TMap<FString, float> GetWeightsFromClass(UClass* class_to_check) { return ItemFinder->GetWordRelatedWeights(class_to_check); }
 
+	UFUNCTION(BlueprintCallable)
+		TSet<FString> GetBasethemeFromClass(UClass* class_to_check) { return ItemFinder->GetBaseThemeFromClass(class_to_check); }
+
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 		FOnScoreAdded OnScoreAdded;
 
