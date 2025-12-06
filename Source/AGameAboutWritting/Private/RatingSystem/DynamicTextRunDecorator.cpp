@@ -51,7 +51,11 @@ protected:
         // TEXT MATERIAL
         if (auto my_rich_text_block = Cast<UMyRichTextBlock>(Owner)) {
             UMaterialInterface* material_to_use = RunInfo.MetaData.Find("material") ? LoadObject<UMaterialInterface>(nullptr, **RunInfo.MetaData.Find("material")) : my_rich_text_block->GetBaseMaterial();
-            if (auto DynMat = UMaterialInstanceDynamic::Create(material_to_use, Owner)) {
+            if (auto DynMat = UMaterialInstanceDynamic::Create(material_to_use, my_rich_text_block)) {
+                UE_LOG(LogTemp, Warning, TEXT("Created MID %s Outer=%s"),
+                    *DynMat->GetName(),
+                    *GetNameSafe(DynMat->GetOuter()));
+
                 for (const auto& Elem : RunInfo.MetaData) {
                     const FString& Key = Elem.Key;
                     const FString& Value = Elem.Value;

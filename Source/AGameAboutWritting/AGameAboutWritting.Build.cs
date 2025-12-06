@@ -14,10 +14,10 @@ public class AGameAboutWritting : ModuleRules
             "GeometryCore",
             "MeshUtilitiesCommon",
             "PhysicsCore",
-            "RealtimeMeshComponent"
+            "ProceduralMeshComponent"
         });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "MeshUtilities" });
 
 
         // DLL copy logic

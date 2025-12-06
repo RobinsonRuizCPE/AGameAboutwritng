@@ -19,14 +19,6 @@ class AGAMEABOUTWRITTING_API URatingPaperTextWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable)
-		void SetupText(const FString& InText, const FLinearColor& InColor, const FSlateFontInfo& InFont);
-
-	UFUNCTION(BlueprintCallable)
-		void SetHighlightColor(FLinearColor const& InColor);
-
-	UFUNCTION(BlueprintCallable)
-		void SetBackgroundEffect();
 
 	UFUNCTION(BlueprintCallable)
 		void AddText(const FString& InText);
@@ -41,11 +33,11 @@ public:
 		void ClearTextBlock();
 
 	UFUNCTION(BlueprintCallable)
-	URichTextBlock* GetTextBlock() const { return TextBlock; }
+	URichTextBlock* GetTextBlock() const { return CustomTextBlock; }
 
 protected:
 	virtual void NativeConstruct() override;
 
 	UPROPERTY(meta = (BindWidget))
-		UMyRichTextBlock* TextBlock;
+		UMyRichTextBlock* CustomTextBlock;
 };

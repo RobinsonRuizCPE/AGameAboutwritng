@@ -15,6 +15,11 @@ class AGAMEABOUTWRITTING_API UMyRichTextBlock : public URichTextBlock
 	GENERATED_BODY()
 public:
 
+	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
+	virtual void BeginDestroy() override;
+	virtual void SynchronizeProperties() override;
+	virtual TSharedRef<SWidget> RebuildWidget() override;
+
 	UMaterialInterface* GetBaseMaterial() const { return BaseMaterial; }
 
 	// Add a MID so it stays alive as long as the widget is alive
