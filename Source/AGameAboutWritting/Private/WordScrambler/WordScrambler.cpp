@@ -40,9 +40,6 @@ AItemTheme* AWordScrambler::ScrambleItems(AItemTheme* first_item, AItemTheme* se
     // 2. Create new item
     AItemTheme* NewItem = World->SpawnActor<AItemTheme>(AItemTheme::StaticClass());
     UProceduralMeshCompWithOverlay::Merge(NewItem->ProceduralMesh, first_item->ProceduralMesh, second_item->ProceduralMesh);
-    
-    //NewItem->ItemStaticMesh->SetStaticMesh(MergedMesh);
-
     MergeItemsThemes(first_item, second_item, NewItem);
 
     // 7. Destroy originals

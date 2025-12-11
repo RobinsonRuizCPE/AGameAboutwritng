@@ -134,7 +134,7 @@ void AItemPreviewActor::SetMesh(UProceduralMeshCompWithOverlay* Mesh)
     MeshComponent->CopyFrom(Mesh);
 
     // Fit camera distance dynamically
-    const FBoxSphereBounds Bounds = MeshComponent->CalcBounds(FTransform::Identity);
+    const FBoxSphereBounds Bounds = MeshComponent->ComputeBoundsFromConvex();
     const float Distance = Bounds.SphereRadius * 2.0f;
 
     SceneCapture->SetRelativeLocation(FVector(Distance, 0.f, 0.f));
@@ -145,6 +145,10 @@ void AItemPreviewActor::SetMesh(UProceduralMeshCompWithOverlay* Mesh)
 void AItemPreviewActor::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+
+    if (MeshComponent->isMeshBuildInProgress()) {
+        return;
+    }
 
     if (bIsCapturingSpriteSheet && MeshComponent)
     {
@@ -188,10 +192,10 @@ void AItemPreviewActor::CenterMeshInCapture()
     if (!MeshComponent || !SceneCapture)
         return;
 
-    const FBoxSphereBounds LocalBounds = MeshComponent->CalcBounds(FTransform::Identity);
+    const FBoxSphereBounds LocalBounds = MeshComponent->ComputeBoundsFromConvex();
     const FVector OriginOffset = -LocalBounds.Origin;
 
-    const FBoxSphereBounds MeshBounds = MeshComponent->Bounds;
+    const FBoxSphereBounds MeshBounds = MeshComponent->ComputeBoundsFromConvex();
     const FVector Extent = MeshBounds.BoxExtent;
 
     const float Diagonal = Extent.GetAbsMax() * 2; 
