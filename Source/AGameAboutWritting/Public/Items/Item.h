@@ -9,10 +9,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/ArrowComponent.h"
 #include "../PlayerCharacter/PlayerCharacter.h"
-
-#include "RealtimeMeshComponent.h"
-#include "RealtimeMeshSimple.h"
-
+#include "../ProceduralMeshComponentOverride/ProceduralMeshCompWithOverlay.h"
 #include "Item.generated.h"
 
 USTRUCT(BlueprintType)
@@ -72,8 +69,8 @@ public:
 
 	/** === Instance Getters === */
 	UFUNCTION(BlueprintCallable, Category = "Item|Accessors")
-		UStaticMesh* GetMeshReference() const {
-		return ItemStaticMesh ? ItemStaticMesh->GetStaticMesh() : nullptr;
+		UProceduralMeshCompWithOverlay* GetMeshReference() const {
+		return ProceduralMesh ? ProceduralMesh : nullptr;
 	};
 
 	UFUNCTION(BlueprintCallable, Category = "Item|Accessors")
@@ -110,6 +107,9 @@ public:
 	/** Please add a variable description */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 		TObjectPtr<UStaticMeshComponent> ItemStaticMesh;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+		TObjectPtr<UProceduralMeshCompWithOverlay> ProceduralMesh;
 
 	/** Please add a variable description */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default")

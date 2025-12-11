@@ -9,7 +9,7 @@ public class AGameAboutWritting : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "Niagara", "GameplayTasks", "RHI", "ImageWrapper", "ImageCore", "MeshDescription",
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine","Renderer", "RenderCore", "InputCore", "EnhancedInput", "UMG", "Niagara", "GameplayTasks", "RHI", "RHICore", "ImageWrapper", "ImageCore", "MeshDescription",
             "StaticMeshDescription",
             "GeometryCore",
             "MeshUtilitiesCommon",
@@ -17,7 +17,7 @@ public class AGameAboutWritting : ModuleRules
             "ProceduralMeshComponent"
         });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "MeshUtilities" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "MeshUtilities"});
 
 
         // DLL copy logic

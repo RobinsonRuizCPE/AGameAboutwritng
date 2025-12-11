@@ -66,8 +66,6 @@ void URatingPaperTextWidget::SetTextWithParams(const FString& InText, FLinearCol
 
 	// Text
 	decorator_text.Append(FString::Printf(TEXT(">%s</>"), *InText));
-	CustomTextBlock->InvalidateLayoutAndVolatility();
-	CustomTextBlock->GetCachedWidget()->Invalidate(EInvalidateWidget::PaintAndVolatility);
 	CustomTextBlock->SetText(FText::FromString(decorator_text));
 }
 

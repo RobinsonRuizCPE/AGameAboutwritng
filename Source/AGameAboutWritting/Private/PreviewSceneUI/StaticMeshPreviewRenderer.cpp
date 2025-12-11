@@ -7,6 +7,8 @@
 #include "RenderingThread.h"
 #include "Engine/World.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "ProceduralMeshComponent/Public/KismetProceduralMeshLibrary.h"
+
 #include "Components/DirectionalLightComponent.h"
 
 
@@ -21,7 +23,7 @@ AItemPreviewActor::AItemPreviewActor()
     Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
     RootComponent = Root;
 
-    MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PreviewMesh"));
+    MeshComponent = CreateDefaultSubobject<UProceduralMeshCompWithOverlay>(TEXT("PreviewMesh"));
     MeshComponent->SetupAttachment(Root);
 
     Light = CreateDefaultSubobject<USpotLightComponent>(TEXT("PreviewLight"));
@@ -93,25 +95,43 @@ AItemPreviewActor::AItemPreviewActor()
         );
 }
 
-void AItemPreviewActor::InitializePreview(UStaticMesh* Mesh, int32 Width, int32 Height)
-{
+void AItemPreviewActor::SetRenderTargetParams(int32 Width, int32 Height) {
     RenderTarget = NewObject<UTextureRenderTarget2D>(this);
     RenderTarget->RenderTargetFormat = RTF_RGBA8;
     RenderTarget->bGPUSharedFlag = false;
     RenderTarget->SRGB = true;
     RenderTarget->InitCustomFormat(Width, Height, PF_B8G8R8A8, false);
     RenderTarget->UpdateResourceImmediate(true);
-
     SceneCapture->TextureTarget = RenderTarget;
+}
 
+void AItemPreviewActor::InitializePreview(UProceduralMeshCompWithOverlay* Mesh, int32 Width, int32 Height)
+{
+    SetRenderTargetParams(Width, Height);
     SetMesh(Mesh);
 }
 
-void AItemPreviewActor::SetMesh(UStaticMesh* Mesh)
+void AItemPreviewActor::InitializePreview(UStaticMesh* Mesh, int32 Width, int32 Height) {
+    SetRenderTargetParams(Width, Height);
+    UStaticMeshComponent* Temp = NewObject<UStaticMeshComponent>(this);
+    Temp->SetStaticMesh(Mesh);
+    UKismetProceduralMeshLibrary::CopyProceduralMeshFromStaticMeshComponent(Temp, 0, MeshComponent, true);
+
+    // Fit camera distance dynamically
+    const FBoxSphereBounds Bounds = MeshComponent->CalcBounds(FTransform::Identity);
+    const float Distance = Bounds.SphereRadius * 2.0f;
+
+    SceneCapture->SetRelativeLocation(FVector(Distance, 0.f, 0.f));
+    CenterMeshInCapture();
+    StartSpriteSheetCapture();
+}
+
+
+void AItemPreviewActor::SetMesh(UProceduralMeshCompWithOverlay* Mesh)
 {
     if (!Mesh) return;
 
-    MeshComponent->SetStaticMesh(Mesh);
+    MeshComponent->CopyFrom(Mesh);
 
     // Fit camera distance dynamically
     const FBoxSphereBounds Bounds = MeshComponent->CalcBounds(FTransform::Identity);
@@ -165,13 +185,13 @@ void AItemPreviewActor::Tick(float DeltaSeconds)
 
 void AItemPreviewActor::CenterMeshInCapture()
 {
-    if (!MeshComponent || !MeshComponent->GetStaticMesh() || !SceneCapture)
+    if (!MeshComponent || !SceneCapture)
         return;
 
     const FBoxSphereBounds LocalBounds = MeshComponent->CalcBounds(FTransform::Identity);
     const FVector OriginOffset = -LocalBounds.Origin;
 
-    const FBoxSphereBounds MeshBounds = MeshComponent->GetStaticMesh()->GetBounds();
+    const FBoxSphereBounds MeshBounds = MeshComponent->Bounds;
     const FVector Extent = MeshBounds.BoxExtent;
 
     const float Diagonal = Extent.GetAbsMax() * 2; 
@@ -267,7 +287,7 @@ UItemPreviewManager* UItemPreviewManager::Get(UObject* WorldContext)
     return GI ? GI->GetPreviewManager() : nullptr;
 }
 
-UTextureRenderTarget2D* UItemPreviewManager::GetOrCreateRenderTargetFromMesh(UStaticMesh* Mesh, int32 Width, int32 Height) {
+UTextureRenderTarget2D* UItemPreviewManager::GetOrCreateRenderTargetFromMesh(UProceduralMeshCompWithOverlay* Mesh, int32 Width, int32 Height) {
     if (auto found_preview_actor = PreviewActorsMap.FindRef(Mesh)) {
         return found_preview_actor->GetRenderTarget();
     }
@@ -289,3 +309,27 @@ UTextureRenderTarget2D* UItemPreviewManager::GetOrCreateRenderTargetFromMesh(USt
     PreviewActorsMap.Add(Mesh, NewPreview);
     return NewPreview->GetRenderTarget();
 }
+
+UTextureRenderTarget2D* UItemPreviewManager::GetOrCreateRenderTargetFromStaticMesh(UStaticMesh* Mesh, int32 Width, int32 Height) {
+    if (auto found_preview_actor = OwnedPreviewActorsMap.FindRef(Mesh)) {
+        return found_preview_actor->GetRenderTarget();
+    }
+
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    AItemPreviewActor* NewPreview = GetWorld()->SpawnActor<AItemPreviewActor>(
+        AItemPreviewActor::StaticClass(),
+        FTransform::Identity,
+        Params
+        );
+
+    if (!NewPreview)
+    {
+        return nullptr;
+    }
+
+    NewPreview->InitializePreview(Mesh, Width, Height);
+    OwnedPreviewActorsMap.Add(Mesh, NewPreview);
+    return NewPreview->GetRenderTarget();
+}
+

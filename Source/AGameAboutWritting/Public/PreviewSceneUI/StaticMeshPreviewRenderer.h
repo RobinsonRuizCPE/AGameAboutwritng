@@ -11,6 +11,7 @@
 #include "GameFramework/Actor.h"
 #include "UObject/NoExportTypes.h"
 #include "MultiViewSpriteBaker.h"
+#include "ProceduralMeshComponentOverride/ProceduralMeshCompWithOverlay.h"
 #include "StaticMeshPreviewRenderer.generated.h"
 
 /**
@@ -24,8 +25,10 @@ class AGAMEABOUTWRITTING_API AItemPreviewActor : public AActor
 
 public:
     AItemPreviewActor();
+    void InitializePreview(UProceduralMeshCompWithOverlay* Mesh, int32 Width = 512, int32 Height = 512);
     void InitializePreview(UStaticMesh* Mesh, int32 Width = 512, int32 Height = 512);
-    void SetMesh(UStaticMesh* Mesh);
+
+    void SetMesh(UProceduralMeshCompWithOverlay* Mesh);
     UTextureRenderTarget2D* GetRenderTarget() const { return RenderTarget; }
     void CenterMeshInCapture();
 
@@ -44,11 +47,14 @@ protected:
         UMaterialInterface* SpriteSheetWriterMaterial;
 
 private:
+    void SetRenderTargetParams(int32 Width = 512, int32 Height = 512);
+
+private:
     UPROPERTY()
         USceneComponent* Root;
 
     UPROPERTY()
-        UStaticMeshComponent* MeshComponent;
+        UProceduralMeshCompWithOverlay* MeshComponent;
 
     UPROPERTY()
         UMaterialInstanceDynamic* AnimatedMID;
@@ -92,15 +98,20 @@ class AGAMEABOUTWRITTING_API UItemPreviewManager : public UObject
 public:
     static UItemPreviewManager* Get(UObject* WorldContext);
 
-    void InitPreviewWorld(UGameInstance* InGameInstance);
+    UFUNCTION(BlueprintCallable, Category = "Preview")
+        UTextureRenderTarget2D* GetOrCreateRenderTargetFromMesh(UProceduralMeshCompWithOverlay* Mesh, int32 Width = 512, int32 Height = 512);
 
     UFUNCTION(BlueprintCallable, Category = "Preview")
-        UTextureRenderTarget2D* GetOrCreateRenderTargetFromMesh(UStaticMesh* Mesh, int32 Width = 512, int32 Height = 512);
+        UTextureRenderTarget2D* GetOrCreateRenderTargetFromStaticMesh(UStaticMesh* Mesh, int32 Width = 512, int32 Height = 512);
+
 
 private:
 
     UPROPERTY()
-        TMap<UStaticMesh*, AItemPreviewActor*> PreviewActorsMap;
+        TMap<UMeshComponent*, AItemPreviewActor*> PreviewActorsMap;
+
+    UPROPERTY()
+        TMap<UStaticMesh*, AItemPreviewActor*> OwnedPreviewActorsMap;
 };
 
 

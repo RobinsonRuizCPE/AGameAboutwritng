@@ -11,12 +11,14 @@
 			"AdditionalDependencies": [
 				"UMG",
 				"Engine",
-				"CoreUObject"
+				"CoreUObject",
+				"ProceduralMeshComponent"
 			]
 		},
 		{
 			"Name": "AGameAboutWrittingEditor",
-			"Type": "Editor"
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
