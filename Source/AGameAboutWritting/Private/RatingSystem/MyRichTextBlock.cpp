@@ -6,7 +6,6 @@
 
 void UMyRichTextBlock::ReleaseSlateResources(bool bReleaseChildren)
 {
-    UE_LOG(LogTemp, Warning, TEXT("UMyRichTextBlock::ReleaseSlate"));
     OwnedTextMaterials.Empty();
     const FText CurrentText = GetText();
     SetText(FText::GetEmpty());
@@ -16,22 +15,18 @@ void UMyRichTextBlock::ReleaseSlateResources(bool bReleaseChildren)
 
 void UMyRichTextBlock::BeginDestroy()
 {
-    UE_LOG(LogTemp, Warning, TEXT("UMyRichTextBlock::BeginDestroy"));
     OwnedTextMaterials.Empty();
     Super::BeginDestroy();
 }
 
 void UMyRichTextBlock::SynchronizeProperties()
 {
-    UE_LOG(LogTemp, Warning, TEXT("UMyRichTextBlock::SyncProperties"));
     Super::SynchronizeProperties();
     // rebuild underlying SWidget, which invalidates runs
 }
 
 TSharedRef<SWidget> UMyRichTextBlock::RebuildWidget()
 {
-    UE_LOG(LogTemp, Warning, TEXT("UMyRichTextBlock::RebuildWidget"));
-
     ClearMaterials();
 
     // Force rebuild of Slate text runs by clearing the text

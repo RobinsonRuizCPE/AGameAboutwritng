@@ -6,33 +6,30 @@ public class AGameAboutWrittingEditor : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        // This is an EDITOR module → only load inside editor
-        if (Target.bBuildEditor == false)
-        {
-            throw new System.Exception("AGameAboutWrittingEditor can only be built in editor configurations.");
-        }
-
+        // Public = ONLY modules safe for runtime
         PublicDependencyModuleNames.AddRange(new string[]
         {
             "Core",
             "CoreUObject",
-            "Engine",
+            "Engine"
+        });
+
+        // Private = ALL editor-only modules
+        PrivateDependencyModuleNames.AddRange(new string[]
+        {
             "UnrealEd",
+            "EditorFramework",
             "Kismet",
             "KismetCompiler",
             "BlueprintGraph",
             "AssetRegistry",
-            "Slate",
-            "SlateCore",
-        });
-
-        PrivateDependencyModuleNames.AddRange(new string[]
-        {
-            "EditorFramework",
-            "UnrealEd",
             "Projects",
             "ApplicationCore",
-            "InputCore"
+            "InputCore",
+            "Slate",
+            "SlateCore"
         });
+
+        PrivateDefinitions.Add("WITH_EDITOR=1");
     }
 }

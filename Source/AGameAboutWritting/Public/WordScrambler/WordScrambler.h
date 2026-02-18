@@ -37,11 +37,7 @@ public:
 		AItemTheme* ScrambleItems(AItemTheme* first_item, AItemTheme* second_item);
 
 private:
-	UStaticMesh* MergeMeshes(UStaticMesh* MeshA, UStaticMesh* MeshB, UObject* Outer);
-	void MergeMaterials(UStaticMesh* MeshA, UStaticMesh* MeshB, UStaticMesh* out_mesh);
 	void MergeItemsThemes(AItemTheme* first_item, AItemTheme* second_item, AItemTheme* out_item);
-
-	void CopySimpleCollision(UStaticMesh* MeshA, const FTransform& TransformA, UStaticMesh* MeshB, const FTransform& TransformB, UStaticMesh* OutMesh);
 
 public:
 

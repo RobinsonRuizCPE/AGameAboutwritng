@@ -39,6 +39,7 @@ class AGAMEABOUTWRITTING_API UProceduralMeshCompWithOverlay : public UProcedural
         int32 MaxTrianglesPerChunk = 5000;
         int32 CurrentChunkIndex = 0;
         bool bFinished = false;
+        bool bScrambleTextures = false;
     };
 	
 public:

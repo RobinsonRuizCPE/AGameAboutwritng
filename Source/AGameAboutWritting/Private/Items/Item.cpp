@@ -70,13 +70,16 @@ UStaticMesh* AItem::GetItemMeshFromClass(TSubclassOf<AItem> ItemClass)
 
 void AItem::OnHitByPlayerLaser_Implementation()
 {
-	UMaterialInterface* HighlightMat = LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/FXMaterials/OverlayFx/M_DestroyableObjectOverlayMat.M_DestroyableObjectOverlayMat") );
-    ProceduralMesh->SetOverlayMaterial(HighlightMat);
+    if (UMaterialInstanceDynamic* MID = Cast<UMaterialInstanceDynamic>(ProceduralMesh->GetOverlayMaterial())) {
+        MID->SetScalarParameterValue(TEXT("HighlightStrenght"), 1.0f);
+    }
 }
 
 void AItem::OnNoLongerHitByPlayerLaser_Implementation()
 {
-    ProceduralMesh->SetOverlayMaterial(nullptr);
+    if (UMaterialInstanceDynamic* MID = Cast<UMaterialInstanceDynamic>(ProceduralMesh->GetOverlayMaterial())) {
+        MID->SetScalarParameterValue(TEXT("HighlightStrenght"), 0.0f);
+    }
 }
 
 bool AItem::Interact_Implementation(AActor* ActorThatInteract){
@@ -164,8 +167,10 @@ void AItem::BeginPlay()
     if (ItemStaticMesh->GetStaticMesh()) {
         ItemStaticMesh->GetStaticMesh()->bAllowCPUAccess = true;
         UKismetProceduralMeshLibrary::CopyProceduralMeshFromStaticMeshComponent(ItemStaticMesh, 0, ProceduralMesh, true);
-        
     }
+
+    UMaterialInterface* OverlayMat = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/FXMaterials/OverlayFx/M_DestroyableObjectOverlayMat.M_DestroyableObjectOverlayMat"));
+    ProceduralMesh->SetOverlayMaterial(UMaterialInstanceDynamic::Create(OverlayMat, this));
 
 	ProceduralMesh->SetSimulatePhysics(true);
 	ProceduralMesh->SetEnableGravity(true);

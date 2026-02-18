@@ -17,7 +17,7 @@ public class AGameAboutWritting : ModuleRules
             "ProceduralMeshComponent"
         });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "MeshUtilities"});
+		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore"});
 
 
         // DLL copy logic

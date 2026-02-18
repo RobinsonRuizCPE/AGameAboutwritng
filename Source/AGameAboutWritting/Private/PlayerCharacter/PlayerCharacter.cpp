@@ -2,6 +2,10 @@
 
 
 #include "PlayerCharacter/PlayerCharacter.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
+#include "InputMappingContext.h"
+#include "InputAction.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -14,7 +18,6 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
@@ -28,7 +31,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 void APlayerCharacter::StopInteractWithObject_Implementation() {}
@@ -36,11 +38,11 @@ void APlayerCharacter::StopInteractWithObject_Implementation() {}
 AActor* APlayerCharacter::GetCurrentlyHighlightedActor_Implementation() { return nullptr; }
 
 void APlayerCharacter::InteractWithActor_Implementation(AActor* actor_to_interact_with) {
-	if (!actor_to_interact_with->Implements<UHighlightInterface>()) {
+	if (!actor_to_interact_with->Implements<UInteractionInterface>()) {
 		return;
 	}
 
-	IHighlightInterface::Execute_Interact(actor_to_interact_with, this);
+	IInteractionInterface::Execute_Interact(actor_to_interact_with, this);
 }
 
 void APlayerCharacter::ReleaseInteractionInput_Implementation() {}

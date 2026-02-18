@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "../Items/HighlightInterface.h"
 #include "GameFramework/Character.h"
+#include "InputMappingContext.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
-class AGAMEABOUTWRITTING_API APlayerCharacter : public ACharacter, public IHighlightInterface
+class AGAMEABOUTWRITTING_API APlayerCharacter : public ACharacter, public IInteractionInterface
 {
 	GENERATED_BODY()
 
@@ -44,4 +45,5 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactive")
 		void InteractWithActor(AActor* actor_to_interact_with);
 	virtual void InteractWithActor_Implementation(AActor* actor_to_interact_with);
+
 };

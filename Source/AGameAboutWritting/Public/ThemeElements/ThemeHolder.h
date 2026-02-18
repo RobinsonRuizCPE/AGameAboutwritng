@@ -36,6 +36,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void OnHitByPlayerLaser_Implementation() override;
+	virtual void OnNoLongerHitByPlayerLaser_Implementation() override;
+
 	UFUNCTION(BlueprintCallable, Category = "Item holder")
 		void DetachFromHolder(AItemTheme* item_to_detach);
 

@@ -18,6 +18,7 @@ UProceduralMeshCompWithOverlay::UProceduralMeshCompWithOverlay(const FObjectInit
 {
     PrimaryComponentTick.bCanEverTick = true;
     PrimaryComponentTick.bStartWithTickEnabled = false; // we’ll enable only when needed
+    PrimaryComponentTick.bTickEvenWhenPaused = true;
 }
 
 void UProceduralMeshCompWithOverlay::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -182,7 +183,13 @@ void UProceduralMeshCompWithOverlay::ProcessOneTriangleChunk(
     {
         FPendingSection NewChunk;
         NewChunk.SectionIndex = Task.CurrentChunkIndex++;
-        NewChunk.Material = Task.Materials[Task.CurrentSection];
+        if (Task.bScrambleTextures) {
+            const int32 RandIndex = FMath::RandRange(0, Task.Materials.Num() - 1);
+            NewChunk.Material = Task.Materials[RandIndex];
+        }
+        else {
+            NewChunk.Material = Task.Materials[Task.CurrentSection];
+        }
         NewChunk.bCollision = Sec.bEnableCollision;
 
         PendingSections.Add(MoveTemp(NewChunk));
@@ -245,7 +252,7 @@ void UProceduralMeshCompWithOverlay::PrepareMergedSections(
     UProceduralMeshCompWithOverlay* B)
 {
     OutMesh->ActiveSplitTask = MakeUnique<FMeshSplitTask>();
-
+    OutMesh->ActiveSplitTask->bScrambleTextures = false;
     // Reserve to avoid reallocs
     int32 TotalSections = A->GetNumSections() + B->GetNumSections();
     OutMesh->ActiveSplitTask->Sections.Reserve(TotalSections);

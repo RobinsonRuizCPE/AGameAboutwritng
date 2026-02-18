@@ -25,7 +25,9 @@ AThemeHolder::AThemeHolder()
 void AThemeHolder::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	UMaterialInterface* OverlayMat = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/FXMaterials/OverlayFx/M_DestroyableObjectOverlayMat.M_DestroyableObjectOverlayMat"));
+	StaticMesh->SetOverlayMaterial(UMaterialInstanceDynamic::Create(OverlayMat, this));
 }
 
 // Called every frame
@@ -33,6 +35,20 @@ void AThemeHolder::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AThemeHolder::OnHitByPlayerLaser_Implementation()
+{
+	if (UMaterialInstanceDynamic* MID = Cast<UMaterialInstanceDynamic>(StaticMesh->GetOverlayMaterial())) {
+		MID->SetScalarParameterValue(TEXT("HighlightStrenght"), 1.0f);
+	}
+}
+
+void AThemeHolder::OnNoLongerHitByPlayerLaser_Implementation()
+{
+	if (UMaterialInstanceDynamic* MID = Cast<UMaterialInstanceDynamic>(StaticMesh->GetOverlayMaterial())) {
+		MID->SetScalarParameterValue(TEXT("HighlightStrenght"), 0.0f);
+	}
 }
 
 void AThemeHolder::DetachFromHolder(AItemTheme* item_to_detach) {

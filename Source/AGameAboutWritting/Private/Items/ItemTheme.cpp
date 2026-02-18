@@ -21,7 +21,7 @@ void AItemTheme::UseObject_Implementation(FVector UseDirection, FVector UsePosit
         return;
     }
 
-    auto actor_highlighted = Cast<AThemeHolder>(PlayerCharacter->GetCurrentlyHighlightedActor());
+    auto actor_highlighted = Cast<AActorInteractable>(PlayerCharacter->GetCurrentlyHighlightedActor());
     if (!actor_highlighted) {
         Super::UseObject_Implementation(UseDirection, UsePosition, ActorUsingObject);
         return;

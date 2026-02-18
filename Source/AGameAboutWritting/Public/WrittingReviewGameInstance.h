@@ -6,6 +6,7 @@
 #include "Engine/GameInstance.h"
 #include "TextScoringSystem/TextScoringSystem.h"
 #include "PreviewSceneUI/StaticMeshPreviewRenderer.h"
+#include "Blueprint/UserWidget.h"
 #include "WrittingReviewGameInstance.generated.h"
 
 UCLASS()
@@ -15,6 +16,12 @@ class AGAMEABOUTWRITTING_API UWrittingReviewGameInstance : public UGameInstance
 
 public:
 	virtual void Init() override;
+
+	UFUNCTION(BlueprintCallable)
+	void CreatePermanentWidget(UUserWidget* widget);
+
+	UFUNCTION(BlueprintCallable)
+		void RemovePermanentWidget(UUserWidget* widget);
 
 	UFUNCTION(BlueprintPure)
 		UItemPreviewManager* GetPreviewManager() const { return PreviewManager; }

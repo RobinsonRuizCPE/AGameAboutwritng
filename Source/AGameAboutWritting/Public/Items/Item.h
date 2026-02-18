@@ -84,6 +84,9 @@ public:
 	virtual bool Interact_Implementation(AActor* ActorThatInteract) override;
 	virtual void StopInteract_Implementation(AActor* ActorStopingInteract) override;
 	virtual void UseObject_Implementation(FVector UseDirection, FVector UsePosition, AActor* ActorUsingObject) override;
+	virtual FString GetInteractionActionName_Implementation() override { return { TEXT("Pick up")}; }
+	virtual FString GetUseActionName_Implementation() override { return TEXT("Throw"); }
+	virtual FString GetCancelActionName_Implementation() override { return TEXT("Drop item"); }
 
 	UFUNCTION(BlueprintCallable, Category = "Item|Accessors")
 		void SetupItemAttachment();

@@ -5,19 +5,20 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "UObject/Interface.h"
+#include <EnhancedInput/Public/InputAction.h>
 #include "HighlightInterface.generated.h"
 
 /**
  * 
  */
 UINTERFACE(Blueprintable)
-class AGAMEABOUTWRITTING_API UHighlightInterface : public UInterface
+class AGAMEABOUTWRITTING_API UInteractionInterface : public UInterface
 {
 	GENERATED_BODY()
 	
 };
 
-class IHighlightInterface
+class IInteractionInterface
 {
     GENERATED_BODY()
 
@@ -32,6 +33,18 @@ public:
 
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
         bool Interact(AActor* ActorThatInteract);
+
+    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
+        FString GetInteractionActionName();
+    virtual FString GetInteractionActionName_Implementation() { return TEXT("Interact"); }
+
+    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
+        FString GetUseActionName();
+    virtual FString GetUseActionName_Implementation() { return TEXT("Use"); }
+
+    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
+        FString GetCancelActionName();
+    virtual FString GetCancelActionName_Implementation() { return TEXT("Cancel"); }
 
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
         bool ReleaseInteractionButton(AActor* ActorThatInteract);

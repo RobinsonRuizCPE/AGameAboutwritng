@@ -15,3 +15,11 @@ void UWrittingReviewGameInstance::Init()
 		TextScoringSystem->Initialize(WordFrequencyTable, WordTypeTable, DTItemList);
 	}
 }
+
+void UWrittingReviewGameInstance::CreatePermanentWidget(UUserWidget* widget) {
+	GetGameViewportClient()->AddViewportWidgetContent(widget->TakeWidget());
+}
+
+void UWrittingReviewGameInstance::RemovePermanentWidget(UUserWidget* widget) {
+	GetGameViewportClient()->RemoveViewportWidgetContent(widget->TakeWidget());
+}

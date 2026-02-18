@@ -55,7 +55,7 @@ AItemPreviewActor::AItemPreviewActor()
     SceneCapture->ShowFlags.SetFog(false);
     SceneCapture->ShowFlags.SetSpotLights(true);
     SceneCapture->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDR;
-    SceneCapture->ShowFlags.Materials = true;
+    //SceneCapture->ShowFlags.Materials = true;
     SceneCapture->ShowOnlyActorComponents(this);
     SceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
     SceneCapture->ShowOnlyComponent(MeshComponent);
