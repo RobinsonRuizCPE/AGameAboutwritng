@@ -56,7 +56,7 @@ void AThemeHolder::DetachFromHolder(AItemTheme* item_to_detach) {
 		return;
 	}
 	item_to_detach->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-	TriggerThemeRemoved();
+	TriggerThemeRemoved(item_to_detach);
 	item_to_detach->Execute_StopInteract(item_to_detach,this);
 }
 

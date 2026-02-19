@@ -14,8 +14,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
 	AItemTheme*, ItemInserted
 );
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(
-	FOnthemeRemoved
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnthemeRemoved,
+	AItemTheme*, ItemRemoved
 );
 
 
@@ -49,7 +50,7 @@ public:
 		void TriggerThemeInserted(AItemTheme* Theme) { OnThemeInserted.Broadcast(Theme); }
 
 	UFUNCTION(BlueprintCallable)
-		void TriggerThemeRemoved() { OnThemeRemoved.Broadcast(); }
+		void TriggerThemeRemoved(AItemTheme* Theme) { OnThemeRemoved.Broadcast(Theme); }
 
 protected:
 	/** Arrow as root */
