@@ -67,3 +67,8 @@ void AThemeHolder::AttachToHolder(AItemTheme* Itemtheme) {
 	Itemtheme->AttachToComponent(StaticMesh, Rules, "HolderSocket");
 }
 
+void AThemeHolder::TriggerThemeInserted(AItemTheme* Theme)
+{ 
+	OnThemeInserted.Broadcast(Theme);
+}
+

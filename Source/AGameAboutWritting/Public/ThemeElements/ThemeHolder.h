@@ -47,7 +47,7 @@ public:
 		void AttachToHolder(AItemTheme* Itemtheme);
 
 	UFUNCTION(BlueprintCallable)
-		void TriggerThemeInserted(AItemTheme* Theme) { OnThemeInserted.Broadcast(Theme); }
+		void TriggerThemeInserted(AItemTheme* Theme);
 
 	UFUNCTION(BlueprintCallable)
 		void TriggerThemeRemoved(AItemTheme* Theme) { OnThemeRemoved.Broadcast(Theme); }

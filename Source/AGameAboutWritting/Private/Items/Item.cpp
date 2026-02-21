@@ -163,7 +163,7 @@ void AItem::BeginPlay()
     ItemStaticMesh->SetVisibility(false);
     ItemStaticMesh->SetCastShadow(false);
     ItemStaticMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
+    
     if (ItemStaticMesh->GetStaticMesh()) {
         ItemStaticMesh->GetStaticMesh()->bAllowCPUAccess = true;
         UKismetProceduralMeshLibrary::CopyProceduralMeshFromStaticMeshComponent(ItemStaticMesh, 0, ProceduralMesh, true);
@@ -171,11 +171,9 @@ void AItem::BeginPlay()
 
     UMaterialInterface* OverlayMat = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/FXMaterials/OverlayFx/M_DestroyableObjectOverlayMat.M_DestroyableObjectOverlayMat"));
     ProceduralMesh->SetOverlayMaterial(UMaterialInstanceDynamic::Create(OverlayMat, this));
-
 	ProceduralMesh->SetSimulatePhysics(true);
 	ProceduralMesh->SetEnableGravity(true);
 	ProceduralMesh->BodyInstance.bUseCCD = true;
-
 
 	ProceduralMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	ProceduralMesh->SetCollisionObjectType(ECC_WorldStatic);
