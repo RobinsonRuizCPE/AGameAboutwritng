@@ -134,6 +134,7 @@ void AItem::StopInteract_Implementation(AActor* ActorStopingInteract) {
     Sphere->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Block);
 
     // Re-enable physics
+    ProceduralMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     ProceduralMesh->SetSimulatePhysics(true);
 
     // Detach pivot from player
@@ -216,6 +217,7 @@ FHandTransforms AItem::GetHandsSockets_Implementation() const
 }
 
 void AItem::SetupItemAttachment() {
+    ProceduralMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Sphere->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 
     ProceduralMesh->SetSimulatePhysics(false);

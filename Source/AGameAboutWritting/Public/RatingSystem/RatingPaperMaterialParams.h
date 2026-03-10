@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -13,35 +10,70 @@ struct FMaterialBoolParam
 
 public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
-        FString Name;
+    FString Name;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
-        float Value = false;
+    bool Value = false;
 
-    FMaterialBoolParam() {}
+    FMaterialBoolParam() = default;
 
-    FMaterialBoolParam(const FString& InName, float InValue)
+    FMaterialBoolParam(const FString& InName, bool InValue)
         : Name(InName), Value(InValue)
-    {}
+    {
+    }
+
+    bool operator==(const FMaterialBoolParam& Other) const
+    {
+        return Name == Other.Name && Value == Other.Value;
+    }
+
+    friend uint32 GetTypeHash(const FMaterialBoolParam& Param)
+    {
+        return HashCombine(GetTypeHash(Param.Name), GetTypeHash(Param.Value));
+    }
 };
 
 USTRUCT(BlueprintType)
-struct FRating_Paper_Material_Parameters
+struct FRatingPaperMaterialParameters
 {
     GENERATED_BODY()
 
 public:
-
-    // Array of your param structs
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
-        TArray<FMaterialBoolParam> Params;
+    TArray<FMaterialBoolParam> Params;
 
-    // Default constructor
-    FRating_Paper_Material_Parameters() {}
+    FRatingPaperMaterialParameters() = default;
 
-    // Constructor that takes any number of params
-    FRating_Paper_Material_Parameters(std::initializer_list<FMaterialBoolParam> InParams)
+    FRatingPaperMaterialParameters(std::initializer_list<FMaterialBoolParam> InParams)
+        : Params(InParams)
     {
-        Params = InParams; // copies automatically
+    }
+
+    bool operator==(const FRatingPaperMaterialParameters& Other) const
+    {
+        if (Params.Num() != Other.Params.Num())
+        {
+            return false;
+        }
+
+        for (int32 i = 0; i < Params.Num(); ++i)
+        {
+            if (!(Params[i] == Other.Params[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    friend uint32 GetTypeHash(const FRatingPaperMaterialParameters& Parameters)
+    {
+        uint32 Hash = 0;
+        for (const FMaterialBoolParam& Param : Parameters.Params)
+        {
+            Hash = HashCombine(Hash, GetTypeHash(Param));
+        }
+        return Hash;
     }
 };

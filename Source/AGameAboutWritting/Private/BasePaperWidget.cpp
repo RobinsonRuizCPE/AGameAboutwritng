@@ -21,6 +21,7 @@ void UBasePaperWidget::NativeConstruct()
 		MultiLineEditableText_0->OnTextChanged.AddDynamic(this, &UBasePaperWidget::HandleTextChanged);
 		PreviousActualLines = 1;
 		PreviousEstimatedLines = 1;
+		MultiLineEditableText_0->AllowContextMenu = false;
 
 		PreviousValidText = MultiLineEditableText_0->GetText();
 
@@ -32,6 +33,16 @@ void UBasePaperWidget::NativeConstruct()
 		BGImage->SetOpacity(1.f);  // Just an example of modifying the image
 	}
 }
+
+void UBasePaperWidget::GenerateContextMenu() {
+
+}
+
+void UBasePaperWidget::SetKeyboardFocusOnText() {
+	MultiLineEditableText_0->SetSelectAllTextWhenFocused(false);
+	MultiLineEditableText_0->SetKeyboardFocus();
+}
+
 
 void UBasePaperWidget::HandleTextChanged(const FText& NewText)
 {

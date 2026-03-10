@@ -24,10 +24,10 @@ public:
 		void AddText(const FString& InText);
 
 	UFUNCTION(BlueprintCallable)
-		void AddTextWithParams(const FString& InText, FLinearColor const& text_color, FLinearColor const& background_color, FString const& material_path, FRating_Paper_Material_Parameters const& material_parameter);
+		void AddTextWithParams(const FString& InText, FLinearColor const& text_color, FLinearColor const& background_color, FString const& material_path, FRatingPaperMaterialParameters const& material_parameter);
 
 	UFUNCTION(BlueprintCallable)
-		void SetTextWithParams(const FString& InText, FLinearColor const& text_color, FLinearColor const& background_color, FString const& material_path, FRating_Paper_Material_Parameters const& material_parameter);
+		void SetTextWithParams(const FString& InText, FLinearColor const& text_color, FLinearColor const& background_color, FString const& material_path, FRatingPaperMaterialParameters const& material_parameter);
 
 	UFUNCTION(BlueprintCallable)
 		void ClearTextBlock();

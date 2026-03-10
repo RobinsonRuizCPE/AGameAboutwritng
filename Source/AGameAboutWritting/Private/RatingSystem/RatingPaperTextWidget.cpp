@@ -23,50 +23,65 @@ void URatingPaperTextWidget::AddText(const FString& InText) {
 	CustomTextBlock->SetText(FText::FromString(new_text));
 }
 
-void URatingPaperTextWidget::AddTextWithParams(const FString& InText, FLinearColor const& text_color, FLinearColor const& background_color, FString const& material_path, FRating_Paper_Material_Parameters const& material_parameter) {
-	FString HexColor = text_color.ToFColor(true).ToHex();
-	FString BgHex = background_color.ToFColor(true).ToHex();
-	FString decorator_text = FString::Printf(TEXT("<dyn color=\"#%s\" bg=\"#%s\""), *HexColor, *BgHex);
+void URatingPaperTextWidget::AddTextWithParams(
+    const FString& InText,
+    const FLinearColor& text_color,
+    const FLinearColor& background_color,
+    const FString& material_path,
+    const FRatingPaperMaterialParameters& material_parameter)
+{
+    const FString HexColor = text_color.ToFColor(true).ToHex();
+    const FString BgHex = background_color.ToFColor(true).ToHex();
+    FString decorator_text = FString::Printf(TEXT("<dyn color=\"#%s\" bg=\"#%s\""), *HexColor, *BgHex);
 
-	//Mat path
-	if (!material_path.IsEmpty()) {
-		decorator_text.Append(FString::Printf(TEXT(" material=\"%s\""), *material_path));
-	}
+    if (!material_path.IsEmpty())
+    {
+        decorator_text.Append(FString::Printf(TEXT(" material=\"%s\""), *material_path));
+    }
 
-	//Mat params
-	for (auto const& param : material_parameter.Params) {
-		decorator_text.Append(FString::Printf(TEXT(" mat_param_%s=\"%f\""), *param.Name, param.Value));
-	}
+    for (const auto& param : material_parameter.Params)
+    {
+        decorator_text.Append(FString::Printf(
+            TEXT(" mat_param_%s=\"%d\""),
+            *param.Name,
+            param.Value ? 1 : 0));
+    }
 
-	// Text
-	decorator_text.Append(FString::Printf(TEXT(">%s</>"), *InText));
-	auto current_text = CustomTextBlock->GetText().ToString();
-	auto const new_text = current_text.Append(decorator_text);
-	CustomTextBlock->SetText(FText::FromString(new_text));
+    decorator_text.Append(FString::Printf(TEXT(">%s</>"), *InText));
+
+    FString current_text = CustomTextBlock->GetText().ToString();
+    current_text.Append(decorator_text);
+    CustomTextBlock->SetText(FText::FromString(current_text));
 }
 
-void URatingPaperTextWidget::SetTextWithParams(const FString& InText, FLinearColor const& text_color, FLinearColor const& background_color, FString const& material_path, FRating_Paper_Material_Parameters const& material_parameter) {
+void URatingPaperTextWidget::SetTextWithParams(
+    const FString& InText,
+    const FLinearColor& text_color,
+    const FLinearColor& background_color,
+    const FString& material_path,
+    const FRatingPaperMaterialParameters& material_parameter)
+{
+    ClearTextBlock();
 
-	ClearTextBlock();
+    const FString HexColor = text_color.ToFColor(true).ToHex();
+    const FString BgHex = background_color.ToFColor(true).ToHex();
+    FString decorator_text = FString::Printf(TEXT("<dyn color=\"#%s\" bg=\"#%s\""), *HexColor, *BgHex);
 
-	// Color
-	FString HexColor = text_color.ToFColor(true).ToHex();
-	FString BgHex = background_color.ToFColor(true).ToHex();
-	FString decorator_text = FString::Printf(TEXT("<dyn color=\"#%s\" bg=\"#%s\""), *HexColor, *BgHex);
+    if (!material_path.IsEmpty())
+    {
+        decorator_text.Append(FString::Printf(TEXT(" material=\"%s\""), *material_path));
+    }
 
-	//Mat path
-	if (!material_path.IsEmpty()) {
-		decorator_text.Append(FString::Printf(TEXT(" material=\"%s\""), *material_path));
-	}
+    for (const auto& param : material_parameter.Params)
+    {
+        decorator_text.Append(FString::Printf(
+            TEXT(" mat_param_%s=\"%d\""),
+            *param.Name,
+            param.Value ? 1 : 0));
+    }
 
-	//Mat params
-	for (auto const& param : material_parameter.Params) {
-		decorator_text.Append(FString::Printf(TEXT(" mat_param_%s=\"%f\""), *param.Name, param.Value));
-	}
-
-	// Text
-	decorator_text.Append(FString::Printf(TEXT(">%s</>"), *InText));
-	CustomTextBlock->SetText(FText::FromString(decorator_text));
+    decorator_text.Append(FString::Printf(TEXT(">%s</>"), *InText));
+    CustomTextBlock->SetText(FText::FromString(decorator_text));
 }
 
 void URatingPaperTextWidget::ClearTextBlock() {

@@ -3,37 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "../Utility/ESentenceStructAndTypes.h"
 #include "TextScoringSystem/WordTypeScoring.h"
 
 class UDataTable;
-
-UENUM(BlueprintType)
-enum class ESentenceType : uint8
-{
-	Unknown			UMETA(DisplayName = "Unknown"),
-	Dialog			UMETA(DisplayName = "Dialog"),
-	Description		UMETA(DisplayName = "Description"),
-	Question		UMETA(DisplayName = "Question"),
-	Command			UMETA(DisplayName = "Command"),
-	Exposition		UMETA(DisplayName = "Exposition"),
-	InternalThought	UMETA(DisplayName = "InternalThought"),
-	Narration		UMETA(DisplayName = "Narration"),
-	Poetic			UMETA(DisplayName = "Poetic"),
-	Statistical		UMETA(DisplayName = "Statistical"),
-	Interjection	UMETA(DisplayName = "Interjection"),
-};
-
-UENUM(BlueprintType)
-enum class ESentenceStructureType : uint8
-{
-	Unknown             UMETA(DisplayName = "Unknown"),
-	Simple              UMETA(DisplayName = "Simple"),
-	Compound            UMETA(DisplayName = "Compound"),
-	Complex             UMETA(DisplayName = "Complex"),
-	CompoundComplex     UMETA(DisplayName = "Compound-Complex"),
-};
-
-
 
 struct FSentenceAttributes
 {

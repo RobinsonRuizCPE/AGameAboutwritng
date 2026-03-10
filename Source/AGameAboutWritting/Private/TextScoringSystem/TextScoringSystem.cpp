@@ -5,6 +5,7 @@
 
 #include "Math/UnrealMathUtility.h"
 #include "Engine/DataTable.h"
+#include "Async/Async.h"
 #include "WrittingReviewStruct.h"
 
 void UTextScoringSystem::Initialize(UDataTable* InFrequencyTable, UDataTable* InTypeTable, UDataTable* InItemListTable)
@@ -16,17 +17,71 @@ void UTextScoringSystem::Initialize(UDataTable* InFrequencyTable, UDataTable* In
 
 void UTextScoringSystem::StartScoringWithDelay(const FString& Text, UObject* WorldContext)
 {
-	if (!WorldContext) return;
-	WorldRef = WorldContext->GetWorld();
+    TWeakObjectPtr<UTextScoringSystem> WeakThis(this);
+    const FString TextCopy = Text;
 
-    SentenceAnalysis->SplitTextIntoSentences(Text);
-	ProcessNextSentence();
+    Async(EAsyncExecution::ThreadPool, [WeakThis, TextCopy]()
+        {
+            if (!WeakThis.IsValid() || !WeakThis->SentenceAnalysis)
+            {
+                return;
+            }
+
+            TArray<FPreparedSentence> LocalPreparedSentences;
+
+            // Heavy work off-thread
+            WeakThis->BuildPreparedSentences(TextCopy, LocalPreparedSentences);
+
+            // Return to game thread
+            AsyncTask(ENamedThreads::GameThread, [WeakThis, Prepared = MoveTemp(LocalPreparedSentences)]() mutable
+                {
+                    if (!WeakThis.IsValid())
+                    {
+                        return;
+                    }
+
+                    FTSTicker::GetCoreTicker().RemoveTicker(WeakThis->ScoringTimerHandle);
+
+                    WeakThis->PreparedSentences = MoveTemp(Prepared);
+                    WeakThis->CurrentSentenceIndex = 0;
+                    WeakThis->CurrentScoringIndex = 0;
+
+                    WeakThis->ProcessNextSentence();
+                });
+        });
 }
 
-void UTextScoringSystem::ParseToScoredTokens(const FString& Text)
+void UTextScoringSystem::BuildPreparedSentences(const FString& Text, TArray<FPreparedSentence>& OutSentences)
 {
-    ScoredTokens.Empty();
+    OutSentences.Reset();
 
+    SentenceAnalysis->SplitTextIntoSentences(Text);
+
+    while (SentenceAnalysis->HasNextSentence())
+    {
+        FPreparedSentence PreparedSentence;
+
+        const auto& SentenceAttributes = SentenceAnalysis->GetCurrentSentenceAttributes();
+        const FString NextSentence = SentenceAnalysis->GetNextSentence();
+
+        PreparedSentence.SentenceText = NextSentence;
+        PreparedSentence.SentenceTypes = TArray<ESentenceType>(SentenceAttributes.SentenceTypes);
+        PreparedSentence.SentenceStructure = SentenceAttributes.SentenceStructure;
+        PreparedSentence.SentenceMultiplier = SentenceAnalysis->GetSentenceMultiplier(SentenceAttributes.SentenceStructure);
+
+        // Important:
+        // make a PURE version of ParseToScoredTokens that returns tokens instead of mutating UObject state
+        PreparedSentence.Tokens = ParseToScoredTokens(NextSentence);
+
+        OutSentences.Add(MoveTemp(PreparedSentence));
+    }
+
+    SentenceAnalysis->Reset();
+}
+
+TArray<FScoredToken> UTextScoringSystem::ParseToScoredTokens(const FString& Text)
+{
+    TArray<FScoredToken> Result;
     FString Current;
 
     for (int32 i = 0; i < Text.Len(); ++i)
@@ -47,12 +102,12 @@ void UTextScoringSystem::ParseToScoredTokens(const FString& Text)
             // Finish current word
             if (!Current.IsEmpty())
             {
-                ScoredTokens.Add(ScoreSingleToken(Current));
+                Result.Add(ScoreSingleToken(Current));
                 Current.Empty();
             }
 
             // Add a scored token for the wrap marker
-            ScoredTokens.Add({ TEXT("\\w"), TEXT(""), 0, TEXT("wrap"), false });
+            Result.Add({ TEXT("\\w"), TEXT(""), 0, TEXT("wrap"), false });
 
             // Skip the 'w'
             i++;
@@ -62,22 +117,22 @@ void UTextScoringSystem::ParseToScoredTokens(const FString& Text)
         {
             if (!Current.IsEmpty())
             {
-                ScoredTokens.Add(ScoreSingleToken(Current));
+                Result.Add(ScoreSingleToken(Current));
                 Current.Empty();
             }
 
-            ScoredTokens.Add({ TEXT("\n"), TEXT(""), 0, TEXT("newline"), false });
+            Result.Add({ TEXT("\n"), TEXT(""), 0, TEXT("newline"), false });
         }
         // --- WHITESPACE ---
         else if (FChar::IsWhitespace(C))
         {
             if (!Current.IsEmpty())
             {
-                ScoredTokens.Add(ScoreSingleToken(Current));
+                Result.Add(ScoreSingleToken(Current));
                 Current.Empty();
             }
 
-            ScoredTokens.Add({ TEXT(" "), TEXT(""), 0, TEXT("space"), false });
+            Result.Add({ TEXT(" "), TEXT(""), 0, TEXT("space"), false });
         }
         // --- SENTENCE ENDING PUNCTUATION ---
         else if (C == '.' || C == '!' || C == '?')
@@ -85,13 +140,13 @@ void UTextScoringSystem::ParseToScoredTokens(const FString& Text)
             if (!Current.IsEmpty())
             {
                 Current.AppendChar(C);
-                ScoredTokens.Add(ScoreSingleToken(Current));
+                Result.Add(ScoreSingleToken(Current));
                 Current.Empty();
             }
             else
             {
                 FString Punc(1, &C);
-                ScoredTokens.Add({ Punc, TEXT(""), 0, TEXT("punctuation"), false });
+                Result.Add({ Punc, TEXT(""), 0, TEXT("punctuation"), false });
             }
         }
         // --- NORMAL CHAR ---
@@ -103,8 +158,10 @@ void UTextScoringSystem::ParseToScoredTokens(const FString& Text)
 
     if (!Current.IsEmpty())
     {
-        ScoredTokens.Add(ScoreSingleToken(Current));
+        Result.Add(ScoreSingleToken(Current));
     }
+
+    return Result;
 }
 
 FScoredToken UTextScoringSystem::ScoreSingleToken(const FString& Raw)
@@ -124,48 +181,64 @@ FScoredToken UTextScoringSystem::ScoreSingleToken(const FString& Raw)
 	Token.Score = WordFrequencyScorer->GetFrequencyScore(Clean);
 	Token.ItemClass = ItemFinder->GetCorrespondingItemClasses(Clean);
 
+    //ItemFinder->ProcessThemeForWord(Clean);
+
 	return Token;
 }
 
 void UTextScoringSystem::ProcessNextSentence() {
     FTSTicker::GetCoreTicker().RemoveTicker(ScoringTimerHandle);
 
-	if (!SentenceAnalysis->HasNextSentence()) {
-		SentenceAnalysis->Reset();
-		OnReviewComplete.Broadcast();
-		return;
-	}
+    if (!PreparedSentences.IsValidIndex(CurrentSentenceIndex))
+    {
+        PreparedSentences.Reset();
+        CurrentSentenceIndex = 0;
+        CurrentScoringIndex = 0;
+        OnReviewComplete.Broadcast();
+        return;
+    }
 
-	CurrentScoringIndex = 0;
-	auto const& sentence_attributes = SentenceAnalysis->GetCurrentSentenceAttributes();
-	ParseToScoredTokens(SentenceAnalysis->GetNextSentence());
-	OnSentencedProcessed.Broadcast(TArray<ESentenceType>(sentence_attributes.SentenceTypes), sentence_attributes.SentenceStructure);
-    OnMultiplicatorAdded.Broadcast(SentenceAnalysis->GetSentenceMultiplier(sentence_attributes.SentenceStructure), "Sentence structure", "");
+    const FPreparedSentence& Sentence = PreparedSentences[CurrentSentenceIndex];
+
+    CurrentScoringIndex = 0;
+    ScoredTokens = Sentence.Tokens;
+
+    OnSentencedProcessed.Broadcast(Sentence.SentenceTypes, Sentence.SentenceStructure);
+    OnMultiplicatorAdded.Broadcast(Sentence.SentenceMultiplier, "Sentence structure", "");
+
+    ++CurrentSentenceIndex;
+
     ScoringTimerHandle = FTSTicker::GetCoreTicker().AddTicker(
         FTickerDelegate::CreateUObject(this, &UTextScoringSystem::ProcessNextScoredToken),
-        0.2f   // Delay between calls in seconds
+        0.2f
     );
 }
 
 
 bool UTextScoringSystem::ProcessNextScoredToken(float DeltaTime)
 {
-	if (!ScoredTokens.IsValidIndex(CurrentScoringIndex))
-	{
-		ProcessNextSentence();
-		return true;
-	}
+    if (!ScoredTokens.IsValidIndex(CurrentScoringIndex))
+    {
+        ProcessNextSentence();
+        return true;
+    }
 
-	const FScoredToken& Token = ScoredTokens[CurrentScoringIndex++];
-	
-	if (Token.ShouldBeScored) {
-		OnScoreAdded.Broadcast(Token.Score, Token.CleanWord, "Frequency");
-	}
+    const FScoredToken& Token = ScoredTokens[CurrentScoringIndex++];
 
-    for(auto const class_discovered : Token.ItemClass){
-		OnItemDiscovered.Broadcast(class_discovered, Token.CleanWord);
-	}
+    if (Token.ShouldBeScored)
+    {
+        OnScoreAdded.Broadcast(Token.Score, Token.CleanWord, "Frequency");
+    }
 
-	OnWordProcessed.Broadcast(Token.OriginalText, FLinearColor{ static_cast<float>(Token.Score) / 100.f, 0.f,0.f,1.f });
+    for (const auto ClassDiscovered : Token.ItemClass)
+    {
+        OnItemDiscovered.Broadcast(ClassDiscovered, Token.CleanWord);
+    }
+
+    OnWordProcessed.Broadcast(
+        Token.OriginalText,
+        FLinearColor(static_cast<float>(Token.Score) / 100.f, 0.f, 0.f, 1.f)
+    );
+
     return true;
 }

@@ -170,4 +170,35 @@ TSet<FString> ItemListFinder::GetBaseThemeFromClass(UClass* class_to_search) {
     return {};
 }
 
+void ItemListFinder::ProcessThemeForWord(FString const& word) {
+    const TMap<FString, float> RelatedThemes = GetRelatedThemeForWord(word);
+    for (const TPair<FString, float>& Pair : RelatedThemes)
+    {
+        CurrentReviewThemes.FindOrAdd(Pair.Key) += Pair.Value;
+    }
+}
+
+void ItemListFinder::SortThemes() {
+    CurrentReviewThemes.ValueStableSort([](auto A, auto B) { return A > B; });
+    //SortedThemes.Sort([](auto& A, auto& B) { return A.Value > B.Value; });
+}
+
+TMap<FString, float> ItemListFinder::GetRelatedThemeForWord(FString const& word) {
+    FTCHARToUTF8 WordUtf8(*word);
+    RelatedResult* Results = nullptr;
+    int Count = GetRelatedWords(WordUtf8.Get(), &Results);
+
+    TMap<FString, float> RelatedMap;
+    RelatedMap.Add(word, 2.0);
+    for (int K = 0; K < Count; K++)
+    {
+        FString Label = UTF8_TO_TCHAR(Results[K].label);
+        float Weight = Results[K].weight;
+        RelatedMap.Add(Label, Weight + 1);
+    }
+
+    return RelatedMap;
+}
+
+
 

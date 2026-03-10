@@ -40,7 +40,7 @@ static void ConvertProcMeshWithoverlayToDynMeshVertex(FDynamicMeshVertex& Vert, 
 FMyProcMeshSceneProxy::FMyProcMeshSceneProxy(UProceduralMeshCompWithOverlay* Component)
 	: FPrimitiveSceneProxy(Component)
 	, BodySetup(Component->GetBodySetup())
-	, MaterialRelevance(Component->GetMaterialRelevance(GetScene().GetFeatureLevel()))
+	, MaterialRelevance(Component->GetMaterialRelevance(GetScene().GetShaderPlatform()))
 	, OverlayMaterial(Component->OverlayMaterial)
 {
 	// Copy each section
@@ -377,68 +377,68 @@ uint32 FMyProcMeshSceneProxy::GetAllocatedSize(void) const
 	return(FPrimitiveSceneProxy::GetAllocatedSize());
 }
 
-
-#if RHI_RAYTRACING
-
-
-void FMyProcMeshSceneProxy::GetDynamicRayTracingInstances(FRayTracingMaterialGatheringContext& Context, TArray<FRayTracingInstance>& OutRayTracingInstances)
-{
-	if (!CVarRayTracingProceduralMeshWithOverlay.GetValueOnRenderThread())
-	{
-		return;
-	}
-
-	for (int32 SegmentIndex = 0; SegmentIndex < Sections.Num(); ++SegmentIndex)
-	{
-		const FProcMeshWithoverlayProxySection* Section = Sections[SegmentIndex];
-		if (Section != nullptr && Section->bSectionVisible)
-		{
-			FMaterialRenderProxy* MaterialProxy = Section->Material->GetRenderProxy();
-
-			if (Section->RayTracingGeometry.RayTracingGeometryRHI.IsValid())
-			{
-				check(Section->RayTracingGeometry.Initializer.IndexBuffer.IsValid());
-
-				FRayTracingInstance RayTracingInstance;
-				RayTracingInstance.Geometry = &Section->RayTracingGeometry;
-				RayTracingInstance.InstanceTransforms.Add(GetLocalToWorld());
-
-				uint32 SectionIdx = 0;
-				FMeshBatch MeshBatch;
-
-				MeshBatch.VertexFactory = &Section->VertexFactory;
-				MeshBatch.SegmentIndex = 0;
-				MeshBatch.MaterialRenderProxy = Section->Material->GetRenderProxy();
-				MeshBatch.ReverseCulling = IsLocalToWorldDeterminantNegative();
-				MeshBatch.Type = PT_TriangleList;
-				MeshBatch.DepthPriorityGroup = SDPG_World;
-				MeshBatch.bCanApplyViewModeOverrides = false;
-				MeshBatch.CastRayTracedShadow = IsShadowCast(Context.ReferenceView);
-
-				FMeshBatchElement& BatchElement = MeshBatch.Elements[0];
-				BatchElement.IndexBuffer = &Section->IndexBuffer;
-
-				bool bHasPrecomputedVolumetricLightmap;
-				FMatrix PreviousLocalToWorld;
-				int32 SingleCaptureIndex;
-				bool bOutputVelocity;
-				GetScene().GetPrimitiveUniformShaderParameters_RenderThread(GetPrimitiveSceneInfo(), bHasPrecomputedVolumetricLightmap, PreviousLocalToWorld, SingleCaptureIndex, bOutputVelocity);
-				bOutputVelocity |= AlwaysHasVelocity();
-
-				FDynamicPrimitiveUniformBuffer& DynamicPrimitiveUniformBuffer = Context.RayTracingMeshResourceCollector.AllocateOneFrameResource<FDynamicPrimitiveUniformBuffer>();
-				DynamicPrimitiveUniformBuffer.Set(Context.RHICmdList, GetLocalToWorld(), PreviousLocalToWorld, GetBounds(), GetLocalBounds(), GetLocalBounds(), ReceivesDecals(), bHasPrecomputedVolumetricLightmap, bOutputVelocity, GetCustomPrimitiveData());
-				BatchElement.PrimitiveUniformBufferResource = &DynamicPrimitiveUniformBuffer.UniformBuffer;
-
-				BatchElement.FirstIndex = 0;
-				BatchElement.NumPrimitives = Section->IndexBuffer.Indices.Num() / 3;
-				BatchElement.MinVertexIndex = 0;
-				BatchElement.MaxVertexIndex = Section->VertexBuffers.PositionVertexBuffer.GetNumVertices() - 1;
-
-				RayTracingInstance.Materials.Add(MeshBatch);
-				OutRayTracingInstances.Add(RayTracingInstance);
-			}
-		}
-	}
-}
-
-#endif
+//
+//#if RHI_RAYTRACING
+//
+//
+//void FMyProcMeshSceneProxy::GetDynamicRayTracingInstances(FRayTracingMaterialGatheringContext& Context, TArray<FRayTracingInstance>& OutRayTracingInstances)
+//{
+//	if (!CVarRayTracingProceduralMeshWithOverlay.GetValueOnRenderThread())
+//	{
+//		return;
+//	}
+//
+//	for (int32 SegmentIndex = 0; SegmentIndex < Sections.Num(); ++SegmentIndex)
+//	{
+//		const FProcMeshWithoverlayProxySection* Section = Sections[SegmentIndex];
+//		if (Section != nullptr && Section->bSectionVisible)
+//		{
+//			FMaterialRenderProxy* MaterialProxy = Section->Material->GetRenderProxy();
+//
+//			if (Section->RayTracingGeometry.RayTracingGeometryRHI.IsValid())
+//			{
+//				check(Section->RayTracingGeometry.Initializer.IndexBuffer.IsValid());
+//
+//				FRayTracingInstance RayTracingInstance;
+//				RayTracingInstance.Geometry = &Section->RayTracingGeometry;
+//				RayTracingInstance.InstanceTransforms.Add(GetLocalToWorld());
+//
+//				uint32 SectionIdx = 0;
+//				FMeshBatch MeshBatch;
+//
+//				MeshBatch.VertexFactory = &Section->VertexFactory;
+//				MeshBatch.SegmentIndex = 0;
+//				MeshBatch.MaterialRenderProxy = Section->Material->GetRenderProxy();
+//				MeshBatch.ReverseCulling = IsLocalToWorldDeterminantNegative();
+//				MeshBatch.Type = PT_TriangleList;
+//				MeshBatch.DepthPriorityGroup = SDPG_World;
+//				MeshBatch.bCanApplyViewModeOverrides = false;
+//				MeshBatch.CastRayTracedShadow = IsShadowCast(Context.ReferenceView);
+//
+//				FMeshBatchElement& BatchElement = MeshBatch.Elements[0];
+//				BatchElement.IndexBuffer = &Section->IndexBuffer;
+//
+//				bool bHasPrecomputedVolumetricLightmap;
+//				FMatrix PreviousLocalToWorld;
+//				int32 SingleCaptureIndex;
+//				bool bOutputVelocity;
+//				GetScene().GetPrimitiveUniformShaderParameters_RenderThread(GetPrimitiveSceneInfo(), bHasPrecomputedVolumetricLightmap, PreviousLocalToWorld, SingleCaptureIndex, bOutputVelocity);
+//				bOutputVelocity |= AlwaysHasVelocity();
+//
+//				FDynamicPrimitiveUniformBuffer& DynamicPrimitiveUniformBuffer = Context.RayTracingMeshResourceCollector.AllocateOneFrameResource<FDynamicPrimitiveUniformBuffer>();
+//				DynamicPrimitiveUniformBuffer.Set(Context.RHICmdList, GetLocalToWorld(), PreviousLocalToWorld, GetBounds(), GetLocalBounds(), GetLocalBounds(), ReceivesDecals(), bHasPrecomputedVolumetricLightmap, bOutputVelocity, GetCustomPrimitiveData());
+//				BatchElement.PrimitiveUniformBufferResource = &DynamicPrimitiveUniformBuffer.UniformBuffer;
+//
+//				BatchElement.FirstIndex = 0;
+//				BatchElement.NumPrimitives = Section->IndexBuffer.Indices.Num() / 3;
+//				BatchElement.MinVertexIndex = 0;
+//				BatchElement.MaxVertexIndex = Section->VertexBuffers.PositionVertexBuffer.GetNumVertices() - 1;
+//
+//				RayTracingInstance.Materials.Add(MeshBatch);
+//				OutRayTracingInstances.Add(RayTracingInstance);
+//			}
+//		}
+//	}
+//}
+//
+//#endif

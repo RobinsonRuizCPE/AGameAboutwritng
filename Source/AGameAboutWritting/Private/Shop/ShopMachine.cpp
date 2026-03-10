@@ -15,6 +15,16 @@ AShopMachine::AShopMachine()
 void AShopMachine::BeginPlay()
 {
 	Super::BeginPlay();
+    //if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+    //{
+    //    InputComponent = NewObject<UInputComponent>(this, TEXT("ShopMachineInput"));
+    //    InputComponent->RegisterComponent();
+    //    InputComponent->BindKey(EKeys::AnyKey, IE_Pressed, this, &AShopMachine::OnAnyKeyPressed);
+    //    InputComponent->BindKey(EKeys::AnyKey, IE_Released, this, &AShopMachine::OnAnyKeyReleased);
+    //    InputComponent->BindKey(EKeys::AnyKey, IE_Repeat, this, &AShopMachine::OnAnyKeyRepeat);
+
+    //    PC->PushInputComponent(InputComponent);
+    //}
 	
 }
 
@@ -24,6 +34,27 @@ void AShopMachine::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
+
+//void AShopMachine::OnAnyKeyPressed(FKey Key)
+//{
+//    if (!DrivingInteraction) return;
+//
+//    DrivingInteraction->PressKey(Key, false);
+//}
+//
+//void AShopMachine::OnAnyKeyRepeat(FKey Key)
+//{
+//    if (!DrivingInteraction) return;
+//
+//    DrivingInteraction->SendKeyChar(Key.GetDisplayName().ToString(), false);
+//}
+//
+//void AShopMachine::OnAnyKeyReleased(FKey Key)
+//{
+//    if (!DrivingInteraction) return;
+//
+//    DrivingInteraction->ReleaseKey(Key);
+//}
 
 void AShopMachine::SendWidgetClickFromUV(
     UWidgetInteractionComponent* WidgetInteraction,

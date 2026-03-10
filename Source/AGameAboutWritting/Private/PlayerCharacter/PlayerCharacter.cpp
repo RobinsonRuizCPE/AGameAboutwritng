@@ -24,7 +24,6 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
@@ -46,3 +45,16 @@ void APlayerCharacter::InteractWithActor_Implementation(AActor* actor_to_interac
 }
 
 void APlayerCharacter::ReleaseInteractionInput_Implementation() {}
+void APlayerCharacter::SecondaryUseWithObject_Implementation() {}
+
+void APlayerCharacter::SetActiveAnimMasks(int32 NewMaskBits)
+{
+	// Rule: FullBody overrides everything else (prevents overlap contamination)
+	const int32 FullBodyBit = static_cast<int32>(EAnimBodyMask::FullBody);
+	if ((NewMaskBits & FullBodyBit) != 0)
+	{
+		NewMaskBits = FullBodyBit;
+	}
+
+	ActiveAnimMaskBits = NewMaskBits;
+}

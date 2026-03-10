@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Engine/HitResult.h"
 #include "../InteractableActor/ActorInteractable.h"
+#include "Components/InputComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Components/WidgetInteractionComponent.h"
 #include "ShopMachine.generated.h"
@@ -26,6 +27,12 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	//UInputComponent* InputComponent;
+	//
+	//void OnAnyKeyPressed(FKey Key);
+	//void OnAnyKeyReleased(FKey Key);
+	//void OnAnyKeyRepeat(FKey Key);
 
 	// UV is 0..1 from your mesh hit
 	UFUNCTION(BlueprintCallable, Category = "UI")

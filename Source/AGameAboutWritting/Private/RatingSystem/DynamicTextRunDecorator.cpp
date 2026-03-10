@@ -1,5 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "RatingSystem/DynamicTextRunDecorator.h"
+#include "WrittingReviewGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "RatingSystem/FDynamicTextHighlightRun.h"
 #include "RatingSystem/RuntimeMaterialRegistry.h"
@@ -49,24 +51,34 @@ protected:
         FinalFont.FontMaterial = Style.Font.FontMaterial;
 
         // TEXT MATERIAL
-        if (auto my_rich_text_block = Cast<UMyRichTextBlock>(Owner)) {
-            UMaterialInterface* material_to_use = RunInfo.MetaData.Find("material") ? LoadObject<UMaterialInterface>(nullptr, **RunInfo.MetaData.Find("material")) : my_rich_text_block->GetBaseMaterial();
-            if (auto DynMat = UMaterialInstanceDynamic::Create(material_to_use, my_rich_text_block)) {
-                UE_LOG(LogTemp, Warning, TEXT("Created MID %s Outer=%s"),
-                    *DynMat->GetName(),
-                    *GetNameSafe(DynMat->GetOuter()));
+         if (auto my_rich_text_block = Cast<UMyRichTextBlock>(Owner)) {
 
-                for (const auto& Elem : RunInfo.MetaData) {
-                    const FString& Key = Elem.Key;
-                    const FString& Value = Elem.Value;
-                    if (Key.StartsWith("mat_param_"))
-                    {
-                        DynMat->SetScalarParameterValue(FName(Key.RightChop(strlen("mat_param_"))), FCString::Atof(*Value));
-                    }
-                }
-                my_rich_text_block->RegisterTextMaterial(DynMat);
-                FinalFont.FontMaterial = DynMat;
-            }
+             UWrittingReviewGameInstance* GI = nullptr;
+             if (UWorld* World = Owner->GetWorld())
+             {
+                 if (UGameInstance* GameInstance = World->GetGameInstance())
+                 {
+                     GI = Cast<UWrittingReviewGameInstance>(GameInstance);
+                     UMaterialInterface* material_to_use = RunInfo.MetaData.Find("material") ? LoadObject<UMaterialInterface>(nullptr, **RunInfo.MetaData.Find("material")) : my_rich_text_block->GetBaseMaterial();
+                     FRatingPaperMaterialParameters MaterialParams;
+                     for (const auto& Elem : RunInfo.MetaData)
+                     {
+                         const FString& Key = Elem.Key;
+                         const FString& Value = Elem.Value;
+
+                         if (Key.StartsWith(TEXT("mat_param_")))
+                         {
+                             const FString ParamName = Key.RightChop(10); // "mat_param_" = 11 chars
+                             const bool bParamValue = FCString::Atoi(*Value) != 0;
+                             MaterialParams.Params.Add(FMaterialBoolParam(ParamName, bParamValue));
+                         }
+                     }
+                     if (auto DynMat = GI->GetOrCreateMaterialInstance(material_to_use, MaterialParams)) {
+
+                         FinalFont.FontMaterial = DynMat;
+                     }
+                 }
+             }
         }
         
         return SNew(SBorder)

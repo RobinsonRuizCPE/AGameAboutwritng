@@ -78,6 +78,27 @@ struct FScoredToken
 		TArray<UClass*> ItemClass;
 };
 
+USTRUCT()
+struct FPreparedSentence
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString SentenceText;
+
+	UPROPERTY()
+	TArray<ESentenceType> SentenceTypes;
+
+	UPROPERTY()
+	ESentenceStructureType SentenceStructure = ESentenceStructureType::Unknown;
+
+	UPROPERTY()
+	float SentenceMultiplier = 1.f;
+
+	UPROPERTY()
+	TArray<FScoredToken> Tokens;
+};
+
 UCLASS(Blueprintable, BlueprintType)
 class AGAMEABOUTWRITTING_API UTextScoringSystem : public UObject
 {
@@ -89,6 +110,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void StartScoringWithDelay(const FString& Text, UObject* WorldContext);
+
+		void BuildPreparedSentences(const FString& Text, TArray<FPreparedSentence>& OutSentences);
 
 	UFUNCTION(BlueprintCallable)
 		TMap<FString, float> GetWeightsFromClass(UClass* class_to_check) { return ItemFinder->GetWordRelatedWeights(class_to_check); }
@@ -118,13 +141,16 @@ private:
 
 	bool ProcessNextScoredToken(float DeltaTime);
 	void ProcessNextSentence();
-	void ParseToScoredTokens(const FString& Text);
+	TArray<FScoredToken> ParseToScoredTokens(const FString& Text);
 	FScoredToken ScoreSingleToken(const FString& Raw);
 
 protected:
 
 	TArray<FString> AllSentences;
 	TArray<FScoredToken> ScoredTokensForCurrentSentence;
+
+	UPROPERTY()
+	TArray<FPreparedSentence> PreparedSentences;
 
 	int32 CurrentSentenceIndex = 0;
 	int32 CurrentTokenIndex = 0;
@@ -141,6 +167,4 @@ private:
 	TUniquePtr<ItemListFinder> ItemFinder;
 
 	FTSTicker::FDelegateHandle ScoringTimerHandle;
-	UWorld* WorldRef = nullptr;
-
 };

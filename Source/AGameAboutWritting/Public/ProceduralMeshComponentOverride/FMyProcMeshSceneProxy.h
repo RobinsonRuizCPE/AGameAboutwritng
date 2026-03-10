@@ -73,11 +73,11 @@ public:
 
 	uint32 GetAllocatedSize(void) const;
 
-#if RHI_RAYTRACING
-	virtual bool IsRayTracingRelevant() const override { return true; }
-	virtual bool HasRayTracingRepresentation() const override { return true; }
-	virtual void GetDynamicRayTracingInstances(FRayTracingMaterialGatheringContext& Context, TArray<FRayTracingInstance>& OutRayTracingInstances) override final;
-#endif
+//#if RHI_RAYTRACING
+//	virtual bool IsRayTracingRelevant() const override { return true; }
+//	virtual bool HasRayTracingRepresentation() const override { return true; }
+//	virtual void GetDynamicRayTracingInstances(FRayTracingMaterialGatheringContext& Context, TArray<FRayTracingInstance>& OutRayTracingInstances) override final;
+//#endif
 
 private:
 	TArray<FProcMeshWithoverlayProxySection*> Sections;

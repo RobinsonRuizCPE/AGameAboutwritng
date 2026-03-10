@@ -4,6 +4,10 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/MultiLineEditableText.h"
 #include "Components/Image.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Blueprint/UserWidget.h"
+#include "Components/Widget.h"
+#include "Framework/Application/SlateApplication.h"
 #include "BasePaperWidget.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
@@ -25,6 +29,15 @@ class AGAMEABOUTWRITTING_API UBasePaperWidget : public UUserWidget
 
 public:
 	virtual void NativeConstruct() override;
+
+	UFUNCTION(BlueprintCallable)
+	void SetKeyboardFocusOnText();
+
+	UFUNCTION(BlueprintCallable)
+	FSlateFontInfo GetTextFont() { return MultiLineEditableText_0->GetFont(); }
+
+	UFUNCTION(BlueprintCallable)
+	void GenerateContextMenu();
 
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")

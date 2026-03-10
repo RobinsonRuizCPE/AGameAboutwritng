@@ -42,6 +42,7 @@ void AThemeHolder::OnHitByPlayerLaser_Implementation()
 	if (UMaterialInstanceDynamic* MID = Cast<UMaterialInstanceDynamic>(StaticMesh->GetOverlayMaterial())) {
 		MID->SetScalarParameterValue(TEXT("HighlightStrenght"), 1.0f);
 	}
+	StaticMesh->SetForceDisableNanite(true);
 }
 
 void AThemeHolder::OnNoLongerHitByPlayerLaser_Implementation()
@@ -49,6 +50,7 @@ void AThemeHolder::OnNoLongerHitByPlayerLaser_Implementation()
 	if (UMaterialInstanceDynamic* MID = Cast<UMaterialInstanceDynamic>(StaticMesh->GetOverlayMaterial())) {
 		MID->SetScalarParameterValue(TEXT("HighlightStrenght"), 0.0f);
 	}
+	StaticMesh->SetForceDisableNanite(false);
 }
 
 void AThemeHolder::DetachFromHolder(AItemTheme* item_to_detach) {

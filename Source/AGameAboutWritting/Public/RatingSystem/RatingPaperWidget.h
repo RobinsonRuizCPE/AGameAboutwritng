@@ -11,6 +11,7 @@
 #include "Components/TextBlock.h"
 #include "RatingPaperTextWidget.h"
 #include "TextScoringSystem/SentenceAnalyser.h"
+#include "../Utility/ESentenceStructAndTypes.h"
 #include "../Items/ItemTheme.h"
 #include "RatingPaperMaterialParams.h"
 #include "RatingPaperWidget.generated.h"
@@ -35,14 +36,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Paper Widget")
 		void AddWordToPage(const FString& WordText, const FLinearColor& Color);
-
-
-	UFUNCTION(BlueprintCallable, Category = "Paper Widget")
-		FLinearColor const GetSentenceTypeColor(ESentenceType sentence_type) const;
-
-	UFUNCTION(BlueprintCallable, Category = "Paper Widget")
-		FRating_Paper_Material_Parameters const& GetSentenceStructMaterialParameter(ESentenceStructureType sentence_struct) const;
-
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Rating|Refresh")
 		void RefreshSentenceStructCount(ESentenceStructureType Type);
@@ -101,20 +94,19 @@ protected:
 		TSubclassOf<URatingPaperTextWidget> TextBlockWidgetClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Paper Widget")
-	TMap<ESentenceType, uint8> SentenceTypesCountMap;
+	TMap<ESentenceType, int32> SentenceTypesCountMap;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Paper Widget")
-	TMap<ESentenceStructureType, uint8> SentenceStructCountMap;
+	TMap<ESentenceStructureType, int32> SentenceStructCountMap;
 
 private:
 	FSlateFontInfo FontInfo;
 
 	FString PreviousWord = FString{};
 	FLinearColor CurrentSentenceBgColor = FLinearColor{ 0,0,0,0.f };
-	FRating_Paper_Material_Parameters CurrentmaterialParameters = {};
+	FRatingPaperMaterialParameters CurrentmaterialParameters = {};
 
 	FString CurrentMatInstancePath;
-	int32 MaterialCounter = 0;
 
 	TArray<AItemTheme*> CurrentItemThemeActors;
 };

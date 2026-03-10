@@ -34,6 +34,12 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
         bool Interact(AActor* ActorThatInteract);
 
+   UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
+        bool SecondaryUse(AActor* ActorThatInteract);
+
+   UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
+        void HandleKeyInput(FKey key_uded, bool pressed);
+
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
         FString GetInteractionActionName();
     virtual FString GetInteractionActionName_Implementation() { return TEXT("Interact"); }
@@ -41,6 +47,10 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
         FString GetUseActionName();
     virtual FString GetUseActionName_Implementation() { return TEXT("Use"); }
+
+    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
+    FString GetSecondaryUseActionName();
+    virtual FString GetSecondaryUseActionName_Implementation() { return TEXT(""); }
 
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
         FString GetCancelActionName();

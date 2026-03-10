@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "../Items/HighlightInterface.h"
+#include "../Utility/EAnimBodyMask.h"
 #include "GameFramework/Character.h"
 #include "InputMappingContext.h"
 #include "PlayerCharacter.generated.h"
@@ -31,9 +32,16 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Animation")
 		void PlayHoldingAnimationMontage(bool activate, bool one_handed);
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Animation")
+		void PlayCustomAnimationMontage(UAnimMontage* anim_montage, bool activate, UPARAM(meta = (Bitmask, BitmaskEnum = "/Script/AGameAboutWritting.EAnimBodyMask"))int32 Masks);
+
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactive")
 		void ReleaseInteractionInput();
 	virtual void ReleaseInteractionInput_Implementation();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactive")
+	void SecondaryUseWithObject();
+	virtual void SecondaryUseWithObject_Implementation();
 
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactive")
@@ -46,4 +54,20 @@ public:
 		void InteractWithActor(AActor* actor_to_interact_with);
 	virtual void InteractWithActor_Implementation(AActor* actor_to_interact_with);
 
+	UFUNCTION(BlueprintCallable, Category = "Anim|Mask")
+	void SetActiveAnimMasks(UPARAM(meta = (Bitmask, BitmaskEnum = "/Script/AGameAboutWritting.EAnimBodyMask"))int32 NewMaskBits);
+
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default")
+	bool IsMovedByPlayer = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default")
+	bool IsPlayerHoldingItem = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	AActor* CurrentlyObjectInteracted = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Anim", meta = (Bitmask, BitmaskEnum = "/Script/AGameAboutWritting.EAnimBodyMask"))
+	int32 ActiveAnimMaskBits = 0;
 };

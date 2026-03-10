@@ -9,44 +9,6 @@
 #include "ThemeElements/ThemeHolder.h"
 #include "Kismet/GameplayStatics.h"
 
-static const TMap<ESentenceType, FLinearColor> SentenceBgColor = {
-	{ ESentenceType::Unknown			,  FLinearColor{0,0,0,0.f}		},
-	{ ESentenceType::Dialog				,  FLinearColor{1,0,0,0.5f}		},
-	{ ESentenceType::Description		,  FLinearColor{1,1,0,0.5f}		},
-	{ ESentenceType::Question			,  FLinearColor{1,1,1,0.5f}		},
-	{ ESentenceType::Command			,  FLinearColor{0,1,0,0.5f}		},
-	{ ESentenceType::Exposition			,  FLinearColor{0,1,1,0.5f}		},
-	{ ESentenceType::InternalThought	,  FLinearColor{0,0,1,0.5f}		},
-	{ ESentenceType::Narration			,  FLinearColor{1,0,1,0.5f}		},
-	{ ESentenceType::Poetic				,  FLinearColor{1,0.5,0.25,0.5f}	},
-	{ ESentenceType::Statistical		,  FLinearColor{0.25,0.8,0.4,0.5f}},
-	{ ESentenceType::Interjection		,  FLinearColor{0.5,0.5,0.9,0.5f}}
-};
-
-static const TMap<ESentenceStructureType, FRating_Paper_Material_Parameters> SentenceMaterialParameter = {
-	{ ESentenceStructureType::Unknown			,FRating_Paper_Material_Parameters{{"Waving",false}, {"Breathing",false}, {"CustomTextureLerpValue",false}}  },
-	{ ESentenceStructureType::Simple         	,FRating_Paper_Material_Parameters{{"Waving",false}, {"Breathing",false}, {"CustomTextureLerpValue",false}}  },
-	{ ESentenceStructureType::Compound       	,FRating_Paper_Material_Parameters{{"Waving",true} , {"Breathing",false}, {"CustomTextureLerpValue",false} }  },
-	{ ESentenceStructureType::Complex        	,FRating_Paper_Material_Parameters{{"Waving",false}, {"Breathing",true }, {"CustomTextureLerpValue",false} }  },
-	{ ESentenceStructureType::CompoundComplex	,FRating_Paper_Material_Parameters{{"Waving",false}, {"Breathing",false}, {"CustomTextureLerpValue",true }}  }
-};
-
-FLinearColor const URatingPaperWidget::GetSentenceTypeColor(ESentenceType sentence_type) const {
-	if (sentence_type == ESentenceType::Unknown) {
-		return FLinearColor{ 1,1,1,1.f };
-	}
-	auto color = SentenceBgColor.Find(sentence_type);
-	return color ? *color : FLinearColor{ 0,0,0,0.f };
-}
-
-FRating_Paper_Material_Parameters const& URatingPaperWidget::GetSentenceStructMaterialParameter(ESentenceStructureType sentence_struct) const {
-	const FRating_Paper_Material_Parameters* Result = SentenceMaterialParameter.Find(sentence_struct);
-	if (!Result) {
-		static FRating_Paper_Material_Parameters Dummy{};
-		return Dummy;
-	}
-	return *Result;
-}
 
 void URatingPaperWidget::NativeConstruct()
 {
@@ -158,15 +120,14 @@ void URatingPaperWidget::HandleSentenceProcessed(TArray<ESentenceType> sentence_
 	int NumColors = sentence_types.Num();
 	CurrentSentenceBgColor = FLinearColor{ 0,0,0,0.f };
 	for (int i = 0; i < NumColors; ++i) {
-		const FLinearColor* NextColor = SentenceBgColor.Find(sentence_types[i]);
+		const FLinearColor NextColor = SentenceStyle::GetSentenceBgColor(sentence_types[i]);
 		SentenceTypesCountMap.FindOrAdd(sentence_types[i])++;
-		if (!NextColor) continue;
 		float T = 1.0f / (i + 1);
-		CurrentSentenceBgColor = FLinearColor::LerpUsingHSV(CurrentSentenceBgColor, *NextColor, T);
+		CurrentSentenceBgColor = FLinearColor::LerpUsingHSV(CurrentSentenceBgColor, NextColor, T);
 	}
 
 	RefreshSentenceTypesCount(sentence_types);
-	CurrentmaterialParameters = *SentenceMaterialParameter.Find(sentence_struct);
+	CurrentmaterialParameters = SentenceStyle::GetSentenceMaterialParameters(sentence_struct);
 
 	if (!IsDesignTime() && CurrentTextWidget) {
 		CurrentTextWidget->GetTextBlock()->SetDefaultFont(FontInfo);
